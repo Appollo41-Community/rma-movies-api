@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RMA Movies API Documentation</title>
+<style>
+  /* ── Reset & base ─────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; scroll-padding-top: 72px; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #24292f;
+    background: #f6f8fa;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Accent palette ───────────────────────────────────────── */
+  :root {
+    --green: #1a7f37;
+    --green-light: #dafbe1;
+    --green-bg: #f0fdf4;
+    --bg: #ffffff;
+    --sidebar-bg: #f6f8fa;
+    --border: #d0d7de;
+    --code-bg: #1b1f24;
+    --code-fg: #e6edf3;
+    --inline-code-bg: #eff1f3;
+    --header-bg: #ffffff;
+    --text: #24292f;
+    --text-muted: #57606a;
+    --sidebar-w: 280px;
+    --header-h: 60px;
+  }
+
+  /* ── Sticky header ────────────────────────────────────────── */
+  .site-header {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    height: var(--header-h);
+    background: var(--header-bg);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center;
+    padding: 0 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+  }
+  .site-header .logo {
+    font-size: 18px; font-weight: 700; color: var(--green);
+    letter-spacing: -.3px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .site-header .logo svg { flex-shrink: 0; }
+  .site-header .version {
+    font-size: 12px; font-weight: 500;
+    background: var(--green-light); color: var(--green);
+    padding: 2px 8px; border-radius: 12px; margin-left: 8px;
+  }
+  .hamburger {
+    display: none; background: none; border: none; cursor: pointer;
+    margin-right: 12px; padding: 4px; color: var(--text);
+  }
+
+  /* ── Sidebar ──────────────────────────────────────────────── */
+  .sidebar {
+    position: fixed; top: var(--header-h); left: 0; bottom: 0;
+    width: var(--sidebar-w);
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 20px 0;
+    z-index: 90;
+    transition: transform .25s ease;
+  }
+  .sidebar-backdrop {
+    display: none; position: fixed; inset: 0; z-index: 89;
+    background: rgba(0,0,0,.35);
+  }
+  .sidebar h4 {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: .8px; color: var(--text-muted);
+    padding: 8px 20px 4px;
+  }
+  .sidebar a {
+    display: block; padding: 6px 20px; font-size: 14px;
+    color: var(--text-muted); text-decoration: none;
+    border-left: 3px solid transparent;
+    transition: all .15s;
+  }
+  .sidebar a:hover,
+  .sidebar a.active {
+    color: var(--green); background: var(--green-bg);
+    border-left-color: var(--green);
+  }
+  .sidebar a code {
+    font-size: 13px; font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    background: var(--inline-code-bg); padding: 1px 5px; border-radius: 4px;
+  }
+  .sidebar a:hover code, .sidebar a.active code {
+    background: var(--green-light);
+  }
+
+  /* ── Main content ─────────────────────────────────────────── */
+  .main {
+    margin-left: var(--sidebar-w);
+    margin-top: var(--header-h);
+    padding: 40px 48px 80px;
+    max-width: 920px;
+  }
+
+  /* ── Typography ───────────────────────────────────────────── */
+  h1 { font-size: 32px; font-weight: 700; color: var(--green); margin-bottom: 8px; }
+  h1 + .subtitle { color: var(--text-muted); font-size: 16px; margin-bottom: 32px; }
+  h2 {
+    font-size: 24px; font-weight: 700; color: var(--text);
+    margin-top: 48px; margin-bottom: 16px;
+    padding-bottom: 8px; border-bottom: 2px solid var(--green-light);
+  }
+  h3 {
+    font-size: 18px; font-weight: 600; color: var(--text);
+    margin-top: 32px; margin-bottom: 12px;
+  }
+  p { margin-bottom: 14px; }
+  strong { font-weight: 600; }
+  a { color: var(--green); }
+
+  /* ── Endpoint header ──────────────────────────────────────── */
+  .endpoint-section {
+    margin-top: 48px;
+    padding-top: 32px;
+    border-top: 1px solid var(--border);
+  }
+  .endpoint-section:first-of-type { border-top: none; padding-top: 0; }
+  .endpoint-title {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+  .method-badge {
+    display: inline-block;
+    font-size: 12px; font-weight: 700; text-transform: uppercase;
+    padding: 3px 10px; border-radius: 12px;
+    background: var(--green); color: #fff;
+    letter-spacing: .4px; line-height: 1.4;
+  }
+  .endpoint-path {
+    font-size: 18px; font-weight: 600;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    color: var(--text);
+  }
+  .try-link {
+    font-size: 13px; font-weight: 500;
+    color: var(--green); text-decoration: none;
+    border: 1px solid var(--green); border-radius: 6px;
+    padding: 3px 10px; margin-left: auto;
+    transition: all .15s;
+    white-space: nowrap;
+  }
+  .try-link:hover { background: var(--green); color: #fff; }
+
+  /* ── Inline code ──────────────────────────────────────────── */
+  code {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 0.875em;
+    background: var(--inline-code-bg);
+    padding: 2px 6px; border-radius: 4px;
+  }
+
+  /* ── Code blocks (dark) ───────────────────────────────────── */
+  pre {
+    background: var(--code-bg);
+    color: var(--code-fg);
+    padding: 18px 20px;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin-bottom: 16px;
+    font-size: 13.5px;
+    line-height: 1.55;
+    position: relative;
+  }
+  pre code {
+    background: none; padding: 0; border-radius: 0;
+    color: inherit; font-size: inherit;
+  }
+  /* JSON syntax colours */
+  pre .json-key { color: #79c0ff; }
+  pre .json-string { color: #a5d6ff; }
+  pre .json-number { color: #f0883e; }
+  pre .json-bool, pre .json-null { color: #ff7b72; }
+  pre .json-bracket { color: #8b949e; }
+  pre .json-url { color: #a5d6ff; }
+
+  /* ── Tables ───────────────────────────────────────────────── */
+  .table-wrap { overflow-x: auto; margin-bottom: 16px; }
+  table {
+    width: 100%; border-collapse: collapse;
+    font-size: 14px;
+  }
+  th {
+    text-align: left; font-weight: 600;
+    background: var(--green-bg); color: var(--text);
+    padding: 10px 14px;
+    border-bottom: 2px solid var(--green-light);
+  }
+  td {
+    padding: 9px 14px; border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  tr:last-child td { border-bottom: none; }
+  td code { font-size: 13px; }
+
+  /* ── Info boxes ───────────────────────────────────────────── */
+  .tip {
+    background: var(--green-bg);
+    border-left: 4px solid var(--green);
+    padding: 12px 16px;
+    border-radius: 0 6px 6px 0;
+    margin-bottom: 16px;
+    font-size: 14px;
+  }
+  .tip strong { color: var(--green); }
+
+  .formula-box {
+    background: var(--green-bg);
+    border: 1px solid var(--green-light);
+    padding: 14px 18px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 14px;
+    color: var(--green);
+    text-align: center;
+  }
+
+  /* ── Meta list (base url, auth, etc.) ─────────────────────── */
+  .meta-list { list-style: none; margin-bottom: 24px; }
+  .meta-list li {
+    padding: 6px 0; font-size: 15px;
+    display: flex; gap: 8px; align-items: baseline;
+  }
+  .meta-list li strong { min-width: 155px; flex-shrink: 0; }
+
+  /* ── Quick-ref table ──────────────────────────────────────── */
+  .qr-table td:first-child code { font-weight: 600; }
+  .qr-paginated { display: inline-block; font-size: 11px; font-weight: 600;
+    padding: 2px 7px; border-radius: 10px; }
+  .qr-yes { background: var(--green-light); color: var(--green); }
+  .qr-no  { background: var(--inline-code-bg); color: var(--text-muted); }
+
+  /* ── Responsive ───────────────────────────────────────────── */
+  @media (max-width: 860px) {
+    .sidebar { transform: translateX(-100%); }
+    .sidebar.open { transform: translateX(0); }
+    .sidebar-backdrop.open { display: block; }
+    .main { margin-left: 0; padding: 28px 20px 60px; }
+    .hamburger { display: block; }
+    .endpoint-title { gap: 6px; }
+    .try-link { margin-left: 0; }
+  }
+  @media (max-width: 480px) {
+    h1 { font-size: 24px; }
+    h2 { font-size: 20px; }
+    pre { font-size: 12.5px; padding: 14px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── Header ──────────────────────────────────────────────── -->
+<header class="site-header">
+  <button class="hamburger" onclick="toggleSidebar()" aria-label="Toggle navigation">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+  <div class="logo">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1a7f37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="3"/><path d="M10 8l6 4-6 4V8z"/></svg>
+    RMA Movies API
+    <span class="version">v1.0.0</span>
+  </div>
+</header>
+
+<!-- ── Sidebar backdrop (mobile) ──────────────────────────── -->
+<div class="sidebar-backdrop" onclick="toggleSidebar()"></div>
+
+<!-- ── Sidebar ─────────────────────────────────────────────── -->
+<nav class="sidebar">
+  <h4>Getting Started</h4>
+  <a href="#overview">Overview</a>
+  <a href="#image-urls">Image URL Construction</a>
+  <a href="#pagination">Pagination</a>
+  <a href="#errors">Error Handling</a>
+
+  <h4>Endpoints</h4>
+  <a href="#get-root"><code>GET /</code></a>
+  <a href="#get-movies"><code>GET /movies</code></a>
+  <a href="#get-movie"><code>GET /movies/{id}</code></a>
+  <a href="#get-movie-cast"><code>GET /movies/{id}/cast</code></a>
+  <a href="#get-movie-images"><code>GET /movies/{id}/images</code></a>
+  <a href="#get-movie-videos"><code>GET /movies/{id}/videos</code></a>
+  <a href="#get-movie-companies"><code>GET /movies/{id}/companies</code></a>
+  <a href="#get-person"><code>GET /people/{id}</code></a>
+  <a href="#get-genres"><code>GET /genres</code></a>
+  <a href="#get-collection"><code>GET /collections/{id}</code></a>
+  <a href="#get-config"><code>GET /config</code></a>
+
+  <h4>Reference</h4>
+  <a href="#quick-reference">Quick Reference Table</a>
+</nav>
+
+<!-- ── Main ────────────────────────────────────────────────── -->
+<main class="main">
+
+  <!-- Overview -->
+  <section id="overview">
+    <h1>RMA Movies API Documentation</h1>
+    <p class="subtitle">A read-only REST API serving 1,000 popular movies for the RMA course at the Faculty of Computing, Union University Belgrade.</p>
+
+    <ul class="meta-list">
+      <li><strong>Base URL:</strong> <code>https://rma.finlab.rs</code></li>
+      <li><strong>Authentication:</strong> None required &mdash; publicly accessible</li>
+      <li><strong>Response format:</strong> JSON (<code>application/json</code>), except the root endpoint which returns plain text</li>
+      <li><strong>HTTP Methods:</strong> All endpoints use <code>GET</code></li>
+    </ul>
+  </section>
+
+  <!-- Image URL Construction -->
+  <section id="image-urls">
+    <h2>Image URL Construction</h2>
+    <p>The API returns image paths (e.g., <code>/9cqNxx0GxF0bflZmeSMuL5tnGzr.jpg</code>) rather than full URLs. To display an image, construct the full URL using the configuration from the <a href="#get-config"><code>/config</code></a> endpoint.</p>
+
+    <p><strong>Formula:</strong></p>
+    <div class="formula-box">{image_base_url}{size}{file_path}</div>
+
+    <p><strong>Example:</strong> To display a movie poster at width 500:</p>
+    <pre><code>https://image.tmdb.org/t/p/w500/9cqNxx0GxF0bflZmeSMuL5tnGzr.jpg</code></pre>
+
+    <p>The available sizes (from <code>/config</code>) are:</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Image Type</th><th>Available Sizes</th></tr></thead>
+      <tbody>
+        <tr><td>Poster</td><td><code>w92</code>, <code>w154</code>, <code>w185</code>, <code>w342</code>, <code>w500</code>, <code>w780</code>, <code>original</code></td></tr>
+        <tr><td>Backdrop</td><td><code>w300</code>, <code>w780</code>, <code>w1280</code>, <code>original</code></td></tr>
+        <tr><td>Profile (people)</td><td><code>w45</code>, <code>w185</code>, <code>h632</code>, <code>original</code></td></tr>
+        <tr><td>Logo (companies)</td><td><code>w45</code>, <code>w92</code>, <code>w154</code>, <code>w185</code>, <code>w300</code>, <code>w500</code>, <code>original</code></td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="tip"><strong>Tip for mobile apps:</strong> Use smaller sizes (e.g., <code>w185</code> for posters in a list) to save bandwidth, and larger sizes (e.g., <code>w500</code> or <code>original</code>) for detail screens.</div>
+  </section>
+
+  <!-- Pagination -->
+  <section id="pagination">
+    <h2>Pagination</h2>
+    <p>Endpoints that return lists of items use a paginated response format. You control pagination with <code>page</code> and <code>page_size</code> query parameters.</p>
+
+    <p><strong>PaginatedResponse format:</strong></p>
+    <pre><code>{
+    <span class="json-key">"page"</span>: <span class="json-number">1</span>,
+    <span class="json-key">"pageSize"</span>: <span class="json-number">20</span>,
+    <span class="json-key">"totalItems"</span>: <span class="json-number">1000</span>,
+    <span class="json-key">"totalPages"</span>: <span class="json-number">50</span>,
+    <span class="json-key">"items"</span>: <span class="json-bracket">[</span> ... <span class="json-bracket">]</span>
+}</code></pre>
+
+    <div class="table-wrap"><table>
+      <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>page</code></td><td>Integer</td><td>The current page number (1-based).</td></tr>
+        <tr><td><code>pageSize</code></td><td>Integer</td><td>The number of items per page.</td></tr>
+        <tr><td><code>totalItems</code></td><td>Integer</td><td>Total number of items matching the query.</td></tr>
+        <tr><td><code>totalPages</code></td><td>Integer</td><td>Total number of pages available.</td></tr>
+        <tr><td><code>items</code></td><td>Array</td><td>The array of results for the current page.</td></tr>
+      </tbody>
+    </table></div>
+
+    <p><strong>Defaults:</strong> <code>page</code> = 1, <code>page_size</code> = 20. The maximum <code>page_size</code> is 100.</p>
+  </section>
+
+  <!-- Error Handling -->
+  <section id="errors">
+    <h2>Error Handling</h2>
+    <p>When something goes wrong, the API returns a JSON error response with an appropriate HTTP status code.</p>
+
+    <p><strong>Error response format:</strong></p>
+    <pre><code>{
+    <span class="json-key">"error"</span>: <span class="json-string">"undefined"</span>,
+    <span class="json-key">"httpCode"</span>: <span class="json-number">404</span>,
+    <span class="json-key">"message"</span>: <span class="json-string">"Movie not found: invalidid"</span>
+}</code></pre>
+
+    <div class="table-wrap"><table>
+      <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>error</code></td><td>String</td><td>Error type identifier.</td></tr>
+        <tr><td><code>httpCode</code></td><td>Integer</td><td>The HTTP status code.</td></tr>
+        <tr><td><code>message</code></td><td>String</td><td>A human-readable error message.</td></tr>
+        <tr><td><code>description</code></td><td>String?</td><td>Additional details about the error (optional).</td></tr>
+        <tr><td><code>suggestion</code></td><td>String?</td><td>A hint on how to fix the request (optional).</td></tr>
+      </tbody>
+    </table></div>
+
+    <p><strong>Common HTTP status codes:</strong></p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Code</th><th>Meaning</th><th>Example</th></tr></thead>
+      <tbody>
+        <tr><td><code>400</code></td><td>Bad Request</td><td>Invalid query parameter (e.g., <code>page_size=200</code>).</td></tr>
+        <tr><td><code>404</code></td><td>Not Found</td><td>Movie, person, or collection with the given ID does not exist.</td></tr>
+        <tr><td><code>500</code></td><td>Internal Server Error</td><td>Unexpected server-side failure.</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <!-- ────────────────────────────────────────────────────────── -->
+  <!--  ENDPOINTS                                                 -->
+  <!-- ────────────────────────────────────────────────────────── -->
+  <h2 id="endpoints-heading">Endpoints</h2>
+
+  <!-- GET / -->
+  <section id="get-root" class="endpoint-section">
+    <div class="endpoint-title">
+      <span class="method-badge">GET</span>
+      <span class="endpoint-path">/</span>
+      <a class="try-link" href="https://rma.finlab.rs/" target="_blank" rel="noopener">Try it &rarr;</a>
+    </div>
+    <p>Returns the API name and version as plain text.</p>
+
+    <p><strong>Example request:</strong></p>
+    <pre><code>GET https://rma.finlab.rs/</code></pre>
+
+    <p><strong>Example response:</strong></p>
+    <pre><code>RMA Movies API 1.0.0.</code></pre>
+  </section>
+
+  <!-- GET /movies -->
+  <section id="get-movies" class="endpoint-section">
+    <div class="endpoint-title">
+      <span class="method-badge">GET</span>
+      <span class="endpoint-path">/movies</span>
+      <a class="try-link" href="https://rma.finlab.rs/movies?page_size=2&sort_by=imdb_rating&sort_order=desc" target="_blank" rel="noopener">Try it &rarr;</a>
+    </div>
+    <p>Returns a paginated list of movies. Supports searching, filtering, and sorting.</p>
+
+    <h3>Query Parameters</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Description</th><th>Default</th></tr></thead>
+      <tbody>
+        <tr><td><code>page</code></td><td>Integer</td><td>Optional</td><td>Page number (must be &gt;= 1).</td><td><code>1</code></td></tr>
+        <tr><td><code>page_size</code></td><td>Integer</td><td>Optional</td><td>Items per page (1-100).</td><td><code>20</code></td></tr>
+        <tr><td><code>query</code></td><td>String</td><td>Optional</td><td>Search movies by title (case-insensitive substring match).</td><td>&mdash;</td></tr>
+        <tr><td><code>genre_id</code></td><td>Integer</td><td>Optional</td><td>Filter by genre ID (see <a href="#get-genres"><code>/genres</code></a> for valid IDs).</td><td>&mdash;</td></tr>
+        <tr><td><code>min_year</code></td><td>Integer</td><td>Optional</td><td>Filter movies released in or after this year.</td><td>&mdash;</td></tr>
+        <tr><td><code>max_year</code></td><td>Integer</td><td>Optional</td><td>Filter movies released in or before this year.</td><td>&mdash;</td></tr>
+        <tr><td><code>min_rating</code></td><td>Float</td><td>Optional</td><td>Filter movies with IMDb rating &gt;= this value (0.0-10.0).</td><td>&mdash;</td></tr>
+        <tr><td><code>sort_by</code></td><td>String</td><td>Optional</td><td>Sort field. One of: <code>imdb_votes</code>, <code>year</code>, <code>imdb_rating</code>, <code>tmdb_rating</code>, <code>popularity</code>, <code>title</code>.</td><td><code>imdb_votes</code></td></tr>
+        <tr><td><code>sort_order</code></td><td>String</td><td>Optional</td><td>Sort direction: <code>asc</code> or <code>desc</code>.</td><td><code>desc</code></td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Response: <code>PaginatedResponse&lt;MovieListItem&gt;</code></h3>
+    <p>Each item in the <code>items</code> array has this structure:</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>imdbId</code></td><td>String</td><td>IMDb identifier (e.g., <code>"tt0111161"</code>).</td></tr>
+        <tr><td><code>title</code></td><td>String</td><td>Movie title.</td></tr>
+        <tr><td><code>year</code></td><td>Integer?</td><td>Release year.</td></tr>
+        <tr><td><code>imdbRating</code></td><td>Float?</td><td>IMDb rating (0.0-10.0).</td></tr>
+        <tr><td><code>imdbVotes</code></td><td>Integer?</td><td>Number of IMDb votes.</td></tr>
+        <tr><td><code>posterPath</code></td><td>String?</td><td>Poster image path (see <a href="#image-urls">Image URL Construction</a>).</td></tr>
+        <tr><td><code>genres</code></td><td>Array</td><td>List of <code>{id, name}</code> genre objects.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Example &mdash; top rated movies</h3>
+    <pre><code>GET https://rma.finlab.rs/movies?page_size=2&amp;sort_by=imdb_rating&amp;sort_order=desc</code></pre>
+    <pre><code>{
+    <span class="json-key">"page"</span>: <span class="json-number">1</span>,
+    <span class="json-key">"pageSize"</span>: <span class="json-number">2</span>,
+    <span class="json-key">"totalItems"</span>: <span class="json-number">1000</span>,
+    <span class="json-key">"totalPages"</span>: <span class="json-number">500</span>,
+    <span class="json-key">"items"</span>: <span class="json-bracket">[</span>
+        {
+            <span class="json-key">"imdbId"</span>: <span class="json-string">"tt0111161"</span>,
+            <span class="json-key">"title"</span>: <span class="json-string">"The Shawshank Redemption"</span>,
+            <span class="json-key">"year"</span>: <span class="json-number">1994</span>,
+            <span class="json-key">"imdbRating"</span>: <span class="json-number">9.3</span>,
+            <span class="json-key">"imdbVotes"</span>: <span class="json-number">3171582</span>,
+            <span class="json-key">"posterPath"</span>: <span class="json-string">"/9cqNxx0GxF0bflZmeSMuL5tnGzr.jpg"</span>,
+            <span class="json-key">"genres"</span>: <span class="json-bracket">[</span>
+                { <span class="json-key">"id"</span>: <span class="json-number">18</span>, <span class="json-key">"name"</span>: <span class="json-string">"Drama"</span> },
+                { <span class="json-key">"id"</span>: <span class="json-number">80</span>, <span class="json-key">"name"</span>: <span class="json-string">"Crime"</span> }
+            <span class="json-bracket">]</span>
+        },
+        {
+            <span class="json-key">"imdbId"</span>: <span class="json-string">"tt0068646"</span>,
+            <span class="json-key">"title"</span>: <span class="json-string">"The Godfather"</span>,
+            <span class="json-key">"year"</span>: <span class="json-number">1972</span>,
+            <span class="json-key">"imdbRating"</span>: <span class="json-number">9.2</span>,
+            <span class="json-key">"imdbVotes"</span>: <span class="json-number">2215919</span>,
+            <span class="json-key">"posterPath"</span>: <span class="json-string">"/3bhkrj58Vtu7enYsRolD1fZdja1.jpg"</span>,
+            <span class="json-key">"genres"</span>: <span class="json-bracket">[</span>
+                { <span class="json-key">"id"</span>: <span class="json-number">18</span>, <span class="json-key">"name"</span>: <span class="json-string">"Drama"</span> },
+                { <span class="json-key">"id"</span>: <span class="json-number">80</span>, <span class="json-key">"name"</span>: <span class="json-string">"Crime"</span> }
+            <span class="json-bracket">]</span>
+        }
+    <span class="json-bracket">]</span>
+}</code></pre>
+
+    <h3>Example &mdash; search by title</h3>
+    <pre><code>GET https://rma.finlab.rs/movies?query=dark&amp;page_size=2</code></pre>
+    <pre><code>{
+    <span class="json-key">"page"</span>: <span class="json-number">1</span>,
+    <span class="json-key">"pageSize"</span>: <span class="json-number">2</span>,
+    <span class="json-key">"totalItems"</span>: <span class="json-number">8</span>,
+    <span class="json-key">"totalPages"</span>: <span class="json-number">4</span>,
+    <span class="json-key">"items"</span>: <span class="json-bracket">[</span>
+        {
+            <span class="json-key">"imdbId"</span>: <span class="json-string">"tt0468569"</span>,
+            <span class="json-key">"title"</span>: <span class="json-string">"The Dark Knight"</span>,
+            <span class="json-key">"year"</span>: <span class="json-number">2008</span>,
+            <span class="json-key">"imdbRating"</span>: <span class="json-number">9.1</span>,
+            <span class="json-key">"imdbVotes"</span>: <span class="json-number">3150267</span>,
+            <span class="json-key">"posterPath"</span>: <span class="json-string">"/qJ2tW6WMUDux911r6m7haRef0WH.jpg"</span>,
+            <span class="json-key">"genres"</span>: <span class="json-bracket">[</span>
+                { <span class="json-key">"id"</span>: <span class="json-number">28</span>, <span class="json-key">"name"</span>: <span class="json-string">"Action"</span> },
+                { <span class="json-key">"id"</span>: <span class="json-number">53</span>, <span class="json-key">"name"</span>: <span class="json-string">"Thriller"</span> },
+                { <span class="json-key">"id"</span>: <span class="json-number">80</span>, <span class="json-key">"name"</span>: <span class="json-string">"Crime"</span> }
+            <span class="json-bracket">]</span>
+        },
+        {
+            <span class="json-key">"imdbId"</span>: <span class="json-string">"tt1345836"</span>,
+            <span class="json-key">"title"</span>: <span class="json-string">"The Dark Knight Rises"</span>,
+            <span class="json-key">"year"</span>: <span class="json-number">2012</span>,
+            <span class="json-key">"imdbRating"</span>: <span class="json-number">8.4</span>,
+            <span class="json-key">"imdbVotes"</span>: <span class="json-number">1984340</span>,
+            <span class="json-key">"posterPath"</span>: <span class="json-string">"/hr0L2aueqlP2BYUblTTjmtn0hw4.jpg"</span>,
+            <span class="json-key">"genres"</span>: <span class="json-bracket">[</span>
+                { <span class="json-key">"id"</span>: <span class="json-number">18</span>, <span class="json-key">"name"</span>: <span class="json-string">"Drama"</span> },
+                { <span class="json-key">"id"</span>: <span class="json-number">28</span>, <span class="json-key">"name"</span>: <span class="json-string">"Action"</span> },
+                { <span class="json-key">"id"</span>: <span class="json-number">53</span>, <span class="json-key">"name"</span>: <span class="json-string">"Thriller"</span> },
+                { <span class="json-key">"id"</span>: <span class="json-number">80</span>, <span class="json-key">"name"</span>: <span class="json-string">"Crime"</span> }
+            <span class="json-bracket">]</span>
+        }
+    <span class="json-bracket">]</span>
+}</code></pre>
+
+    <h3>Example &mdash; filter by year and rating</h3>
+    <pre><code>GET https://rma.finlab.rs/movies?min_year=2020&amp;min_rating=8.0&amp;page_size=2</code></pre>
+    <pre><code>{
+    <span class="json-key">"page"</span>: <span class="json-number">1</span>,
+    <span class="json-key">"pageSize"</span>: <span class="json-number">2</span>,
+    <span class="json-key">"totalItems"</span>: <span class="json-number">8</span>,
+    <span class="json-key">"totalPages"</span>: <span class="json-number">4</span>,
+    <span class="json-key">"items"</span>: <span class="json-bracket">[</span>
+        {
+            <span class="json-key">"imdbId"</span>: <span class="json-string">"tt1160419"</span>,
+            <span class="json-key">"title"</span>: <span class="json-string">"Dune: Part One"</span>,
+            <span class="json-key">"year"</span>: <span class="json-number">2021</span>,
+            <span class="json-key">"imdbRating"</span>: <span class="json-number">8.0</span>,
+            <span class="json-key">"imdbVotes"</span>: <span class="json-number">1031517</span>,
+            <span class="json-key">"posterPath"</span>: <span class="json-string">"/gDzOcq0pfeCeqMBwKIJlSmQpjkZ.jpg"</span>,
+            <span class="json-key">"genres"</span>: <span class="json-bracket">[</span>
+                { <span class="json-key">"id"</span>: <span class="json-number">12</span>, <span class="json-key">"name"</span>: <span class="json-string">"Adventure"</span> },
+                { <span class="json-key">"id"</span>: <span class="json-number">878</span>, <span class="json-key">"name"</span>: <span class="json-string">"Science Fiction"</span> }
+            <span class="json-bracket">]</span>
+        },
+        {
+            <span class="json-key">"imdbId"</span>: <span class="json-string">"tt15398776"</span>,
+            <span class="json-key">"title"</span>: <span class="json-string">"Oppenheimer"</span>,
+            <span class="json-key">"year"</span>: <span class="json-number">2023</span>,
+            <span class="json-key">"imdbRating"</span>: <span class="json-number">8.2</span>,
+            <span class="json-key">"imdbVotes"</span>: <span class="json-number">1014971</span>,
+            <span class="json-key">"posterPath"</span>: <span class="json-string">"/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg"</span>,
+            <span class="json-key">"genres"</span>: <span class="json-bracket">[</span>
+                { <span class="json-key">"id"</span>: <span class="json-number">18</span>, <span class="json-key">"name"</span>: <span class="json-string">"Drama"</span> },
+                { <span class="json-key">"id"</span>: <span class="json-number">36</span>, <span class="json-key">"name"</span>: <span class="json-string">"History"</span> }
+            <span class="json-bracket">]</span>
+        }
+    <span class="json-bracket">]</span>
+}</code></pre>
+  </section>
+
+  <!-- GET /movies/{id} -->
+  <section id="get-movie" class="endpoint-section">
+    <div class="endpoint-title">
+      <span class="method-badge">GET</span>
+      <span class="endpoint-path">/movies/{id}</span>
+      <a class="try-link" href="https://rma.finlab.rs/movies/tt0111161" target="_blank" rel="noopener">Try it &rarr;</a>
+    </div>
+    <p>Returns full details for a single movie.</p>
+
+    <h3>Path Parameters</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>id</code></td><td>String</td><td>The IMDb ID of the movie (e.g., <code>tt0111161</code>).</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Response: <code>Movie</code> object</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>imdbId</code></td><td>String</td><td>IMDb identifier.</td></tr>
+        <tr><td><code>tmdbId</code></td><td>Integer?</td><td>TMDB identifier.</td></tr>
+        <tr><td><code>title</code></td><td>String</td><td>Movie title.</td></tr>
+        <tr><td><code>originalTitle</code></td><td>String?</td><td>Original title (may differ for non-English films).</td></tr>
+        <tr><td><code>overview</code></td><td>String?</td><td>Plot summary.</td></tr>
+        <tr><td><code>tagline</code></td><td>String?</td><td>Movie tagline.</td></tr>
+        <tr><td><code>releaseDate</code></td><td>String?</td><td>Release date in <code>YYYY-MM-DD</code> format.</td></tr>
+        <tr><td><code>year</code></td><td>Integer?</td><td>Release year.</td></tr>
+        <tr><td><code>runtime</code></td><td>Integer?</td><td>Runtime in minutes.</td></tr>
+        <tr><td><code>budget</code></td><td>Long?</td><td>Production budget in USD.</td></tr>
+        <tr><td><code>revenue</code></td><td>Long?</td><td>Box office revenue in USD.</td></tr>
+        <tr><td><code>languageCode</code></td><td>String?</td><td>ISO 639-1 language code (e.g., <code>"en"</code>).</td></tr>
+        <tr><td><code>popularity</code></td><td>Float?</td><td>TMDB popularity score.</td></tr>
+        <tr><td><code>imdbRating</code></td><td>Float?</td><td>IMDb rating (0.0-10.0).</td></tr>
+        <tr><td><code>imdbVotes</code></td><td>Integer?</td><td>Number of IMDb votes.</td></tr>
+        <tr><td><code>tmdbRating</code></td><td>Float?</td><td>TMDB rating (0.0-10.0).</td></tr>
+        <tr><td><code>tmdbVotes</code></td><td>Integer?</td><td>Number of TMDB votes.</td></tr>
+        <tr><td><code>posterPath</code></td><td>String?</td><td>Poster image path.</td></tr>
+        <tr><td><code>backdropPath</code></td><td>String?</td><td>Backdrop image path.</td></tr>
+        <tr><td><code>homepage</code></td><td>String?</td><td>Official website URL.</td></tr>
+        <tr><td><code>genres</code></td><td>Array</td><td>List of <code>{id, name}</code> genre objects.</td></tr>
+        <tr><td><code>collection</code></td><td>Object?</td><td>Collection info <code>{id, name, posterPath, backdropPath}</code> if the movie belongs to a collection; <code>null</code> otherwise.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Example request</h3>
+    <pre><code>GET https://rma.finlab.rs/movies/tt0111161</code></pre>
+
+    <h3>Example response</h3>
+    <pre><code>{
+    <span class="json-key">"imdbId"</span>: <span class="json-string">"tt0111161"</span>,
+    <span class="json-key">"tmdbId"</span>: <span class="json-number">278</span>,
+    <span class="json-key">"title"</span>: <span class="json-string">"The Shawshank Redemption"</span>,
+    <span class="json-key">"originalTitle"</span>: <span class="json-string">"The Shawshank Redemption"</span>,
+    <span class="json-key">"overview"</span>: <span class="json-string">"Imprisoned in the 1940s for the double murder of his wife and her lover, upstanding banker Andy Dufresne begins a new life at the Shawshank prison..."</span>,
+    <span class="json-key">"tagline"</span>: <span class="json-string">"Fear can hold you prisoner. Hope can set you free."</span>,
+    <span class="json-key">"releaseDate"</span>: <span class="json-string">"1994-09-23"</span>,
+    <span class="json-key">"year"</span>: <span class="json-number">1994</span>,
+    <span class="json-key">"runtime"</span>: <span class="json-number">142</span>,
+    <span class="json-key">"budget"</span>: <span class="json-number">25000000</span>,
+    <span class="json-key">"revenue"</span>: <span class="json-number">28341469</span>,
+    <span class="json-key">"languageCode"</span>: <span class="json-string">"en"</span>,
+    <span class="json-key">"popularity"</span>: <span class="json-number">42.1605</span>,
+    <span class="json-key">"imdbRating"</span>: <span class="json-number">9.3</span>,
+    <span class="json-key">"imdbVotes"</span>: <span class="json-number">3171582</span>,
+    <span class="json-key">"tmdbRating"</span>: <span class="json-number">8.717</span>,
+    <span class="json-key">"tmdbVotes"</span>: <span class="json-number">29992</span>,
+    <span class="json-key">"posterPath"</span>: <span class="json-string">"/9cqNxx0GxF0bflZmeSMuL5tnGzr.jpg"</span>,
+    <span class="json-key">"backdropPath"</span>: <span class="json-string">"/zfbjgQE1uSd9wiPTX4VzsLi0rGG.jpg"</span>,
+    <span class="json-key">"homepage"</span>: <span class="json-string">""</span>,
+    <span class="json-key">"genres"</span>: <span class="json-bracket">[</span>
+        { <span class="json-key">"id"</span>: <span class="json-number">18</span>, <span class="json-key">"name"</span>: <span class="json-string">"Drama"</span> },
+        { <span class="json-key">"id"</span>: <span class="json-number">80</span>, <span class="json-key">"name"</span>: <span class="json-string">"Crime"</span> }
+    <span class="json-bracket">]</span>
+}</code></pre>
+
+    <h3>Error example &mdash; movie not found</h3>
+    <pre><code>GET https://rma.finlab.rs/movies/invalidid</code></pre>
+    <pre><code>{
+    <span class="json-key">"error"</span>: <span class="json-string">"undefined"</span>,
+    <span class="json-key">"httpCode"</span>: <span class="json-number">404</span>,
+    <span class="json-key">"message"</span>: <span class="json-string">"Movie not found: invalidid"</span>
+}</code></pre>
+  </section>
+
+  <!-- GET /movies/{id}/cast -->
+  <section id="get-movie-cast" class="endpoint-section">
+    <div class="endpoint-title">
+      <span class="method-badge">GET</span>
+      <span class="endpoint-path">/movies/{id}/cast</span>
+      <a class="try-link" href="https://rma.finlab.rs/movies/tt0111161/cast?page_size=3" target="_blank" rel="noopener">Try it &rarr;</a>
+    </div>
+    <p>Returns a paginated list of cast and crew members for a movie.</p>
+
+    <h3>Path Parameters</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>id</code></td><td>String</td><td>The IMDb ID of the movie.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Query Parameters</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Description</th><th>Default</th></tr></thead>
+      <tbody>
+        <tr><td><code>page</code></td><td>Integer</td><td>Optional</td><td>Page number (must be &gt;= 1).</td><td><code>1</code></td></tr>
+        <tr><td><code>page_size</code></td><td>Integer</td><td>Optional</td><td>Items per page (1-100).</td><td><code>20</code></td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Response: <code>PaginatedResponse&lt;PersonSummary&gt;</code></h3>
+    <p>Each item in the <code>items</code> array:</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>imdbId</code></td><td>String</td><td>IMDb identifier for the person (e.g., <code>"nm0000209"</code>).</td></tr>
+        <tr><td><code>name</code></td><td>String</td><td>Person's name.</td></tr>
+        <tr><td><code>professions</code></td><td>String?</td><td>Comma-separated list of professions.</td></tr>
+        <tr><td><code>department</code></td><td>String?</td><td>Primary department (e.g., <code>"Acting"</code>, <code>"Directing"</code>).</td></tr>
+        <tr><td><code>profilePath</code></td><td>String?</td><td>Profile image path.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Example request</h3>
+    <pre><code>GET https://rma.finlab.rs/movies/tt0111161/cast?page_size=3</code></pre>
+
+    <h3>Example response</h3>
+    <pre><code>{
+    <span class="json-key">"page"</span>: <span class="json-number">1</span>,
+    <span class="json-key">"pageSize"</span>: <span class="json-number">3</span>,
+    <span class="json-key">"totalItems"</span>: <span class="json-number">69</span>,
+    <span class="json-key">"totalPages"</span>: <span class="json-number">23</span>,
+    <span class="json-key">"items"</span>: <span class="json-bracket">[</span>
+        {
+            <span class="json-key">"imdbId"</span>: <span class="json-string">"nm0000317"</span>,
+            <span class="json-key">"name"</span>: <span class="json-string">"Clancy Brown"</span>,
+            <span class="json-key">"professions"</span>: <span class="json-string">"actor,producer,miscellaneous"</span>,
+            <span class="json-key">"department"</span>: <span class="json-string">"Acting"</span>,
+            <span class="json-key">"profilePath"</span>: <span class="json-string">"/1JeBRNG7VS7r64V9lOvej9bZXW5.jpg"</span>
+        },
+        {
+            <span class="json-key">"imdbId"</span>: <span class="json-string">"nm0000209"</span>,
+            <span class="json-key">"name"</span>: <span class="json-string">"Tim Robbins"</span>,
+            <span class="json-key">"professions"</span>: <span class="json-string">"actor,producer,director"</span>,
+            <span class="json-key">"department"</span>: <span class="json-string">"Acting"</span>,
+            <span class="json-key">"profilePath"</span>: <span class="json-string">"/3FfJMIVwXgsIXbAT8ECBSZJAncR.jpg"</span>
+        },
+        {
+            <span class="json-key">"imdbId"</span>: <span class="json-string">"nm0001104"</span>,
+            <span class="json-key">"name"</span>: <span class="json-string">"Frank Darabont"</span>,
+            <span class="json-key">"professions"</span>: <span class="json-string">"writer,producer,director"</span>,
+            <span class="json-key">"department"</span>: <span class="json-string">"Directing"</span>,
+            <span class="json-key">"profilePath"</span>: <span class="json-string">"/vZ50guP86otYTiBSGfi35GNHWVf.jpg"</span>
+        }
+    <span class="json-bracket">]</span>
+}</code></pre>
+  </section>
+
+  <!-- GET /movies/{id}/images -->
+  <section id="get-movie-images" class="endpoint-section">
+    <div class="endpoint-title">
+      <span class="method-badge">GET</span>
+      <span class="endpoint-path">/movies/{id}/images</span>
+      <a class="try-link" href="https://rma.finlab.rs/movies/tt0111161/images?type=backdrop" target="_blank" rel="noopener">Try it &rarr;</a>
+    </div>
+    <p>Returns images (posters, backdrops, and logos) for a movie. This endpoint is <strong>not</strong> paginated.</p>
+
+    <h3>Path Parameters</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>id</code></td><td>String</td><td>The IMDb ID of the movie.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Query Parameters</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Description</th><th>Default</th></tr></thead>
+      <tbody>
+        <tr><td><code>type</code></td><td>String</td><td>Optional</td><td>Filter by image type: <code>poster</code>, <code>backdrop</code>, or <code>logo</code>.</td><td>All types</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Response: <code>MovieImages</code> object</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>posters</code></td><td>Array</td><td>List of poster images.</td></tr>
+        <tr><td><code>backdrops</code></td><td>Array</td><td>List of backdrop images.</td></tr>
+        <tr><td><code>logos</code></td><td>Array</td><td>List of logo images.</td></tr>
+      </tbody>
+    </table></div>
+
+    <p>Each image object:</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>filePath</code></td><td>String</td><td>Image file path (see <a href="#image-urls">Image URL Construction</a>).</td></tr>
+        <tr><td><code>width</code></td><td>Integer?</td><td>Image width in pixels.</td></tr>
+        <tr><td><code>height</code></td><td>Integer?</td><td>Image height in pixels.</td></tr>
+        <tr><td><code>voteAverage</code></td><td>Float?</td><td>Community vote average for the image.</td></tr>
+        <tr><td><code>language</code></td><td>String?</td><td>ISO 639-1 language code, if applicable.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Example request</h3>
+    <pre><code>GET https://rma.finlab.rs/movies/tt0111161/images?type=backdrop</code></pre>
+
+    <h3>Example response (truncated)</h3>
+    <pre><code>{
+    <span class="json-key">"posters"</span>: <span class="json-bracket">[]</span>,
+    <span class="json-key">"backdrops"</span>: <span class="json-bracket">[</span>
+        {
+            <span class="json-key">"filePath"</span>: <span class="json-string">"/jFkuJbWsciMwgcpOEkJIlxTElEp.jpg"</span>,
+            <span class="json-key">"width"</span>: <span class="json-number">1920</span>,
+            <span class="json-key">"height"</span>: <span class="json-number">1080</span>,
+            <span class="json-key">"voteAverage"</span>: <span class="json-number">10.0</span>,
+            <span class="json-key">"language"</span>: <span class="json-string">"pt"</span>
+        },
+        {
+            <span class="json-key">"filePath"</span>: <span class="json-string">"/zfbjgQE1uSd9wiPTX4VzsLi0rGG.jpg"</span>,
+            <span class="json-key">"width"</span>: <span class="json-number">3840</span>,
+            <span class="json-key">"height"</span>: <span class="json-number">2160</span>,
+            <span class="json-key">"voteAverage"</span>: <span class="json-number">7.206</span>
+        },
+        {
+            <span class="json-key">"filePath"</span>: <span class="json-string">"/kXfqcdQKsToO0OUXHcrrNCHDBzO.jpg"</span>,
+            <span class="json-key">"width"</span>: <span class="json-number">2560</span>,
+            <span class="json-key">"height"</span>: <span class="json-number">1440</span>,
+            <span class="json-key">"voteAverage"</span>: <span class="json-number">6.282</span>
+        }
+    <span class="json-bracket">]</span>,
+    <span class="json-key">"logos"</span>: <span class="json-bracket">[]</span>
+}</code></pre>
+
+    <div class="tip"><strong>Tip:</strong> When filtering by <code>type=backdrop</code>, the <code>posters</code> and <code>logos</code> arrays will be empty, and vice versa.</div>
+  </section>
+
+  <!-- GET /movies/{id}/videos -->
+  <section id="get-movie-videos" class="endpoint-section">
+    <div class="endpoint-title">
+      <span class="method-badge">GET</span>
+      <span class="endpoint-path">/movies/{id}/videos</span>
+      <a class="try-link" href="https://rma.finlab.rs/movies/tt0111161/videos?type=Trailer" target="_blank" rel="noopener">Try it &rarr;</a>
+    </div>
+    <p>Returns videos (trailers, teasers, featurettes, etc.) for a movie. This endpoint is <strong>not</strong> paginated and returns a plain array.</p>
+
+    <h3>Path Parameters</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>id</code></td><td>String</td><td>The IMDb ID of the movie.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Query Parameters</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Description</th><th>Default</th></tr></thead>
+      <tbody>
+        <tr><td><code>type</code></td><td>String</td><td>Optional</td><td>Filter by video type (e.g., <code>Trailer</code>, <code>Teaser</code>, <code>Featurette</code>, <code>Behind the Scenes</code>, <code>Clip</code>).</td><td>All types</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Response: Array of <code>Video</code> objects</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>key</code></td><td>String</td><td>Video key (YouTube video ID).</td></tr>
+        <tr><td><code>site</code></td><td>String</td><td>Hosting site (e.g., <code>"YouTube"</code>).</td></tr>
+        <tr><td><code>name</code></td><td>String?</td><td>Video title/name.</td></tr>
+        <tr><td><code>type</code></td><td>String?</td><td>Video type (e.g., <code>"Trailer"</code>, <code>"Teaser"</code>).</td></tr>
+        <tr><td><code>official</code></td><td>Boolean</td><td>Whether it is an official video.</td></tr>
+        <tr><td><code>publishedAt</code></td><td>String?</td><td>Publication timestamp in ISO 8601 format.</td></tr>
+      </tbody>
+    </table></div>
+
+    <p><strong>Building a YouTube URL:</strong> <code>https://www.youtube.com/watch?v={key}</code></p>
+
+    <h3>Example request</h3>
+    <pre><code>GET https://rma.finlab.rs/movies/tt0111161/videos?type=Trailer</code></pre>
+
+    <h3>Example response</h3>
+    <pre><code><span class="json-bracket">[</span>
+    {
+        <span class="json-key">"key"</span>: <span class="json-string">"PLl99DlL6b4"</span>,
+        <span class="json-key">"site"</span>: <span class="json-string">"YouTube"</span>,
+        <span class="json-key">"name"</span>: <span class="json-string">"Trailer"</span>,
+        <span class="json-key">"type"</span>: <span class="json-string">"Trailer"</span>,
+        <span class="json-key">"official"</span>: <span class="json-bool">true</span>,
+        <span class="json-key">"publishedAt"</span>: <span class="json-string">"2021-07-27T19:59:46.000Z"</span>
+    },
+    {
+        <span class="json-key">"key"</span>: <span class="json-string">"xyXX8LXiNJ4"</span>,
+        <span class="json-key">"site"</span>: <span class="json-string">"YouTube"</span>,
+        <span class="json-key">"name"</span>: <span class="json-string">"Original Theatrical Trailer"</span>,
+        <span class="json-key">"type"</span>: <span class="json-string">"Trailer"</span>,
+        <span class="json-key">"official"</span>: <span class="json-bool">true</span>,
+        <span class="json-key">"publishedAt"</span>: <span class="json-string">"2014-07-08T23:28:06.000Z"</span>
+    }
+<span class="json-bracket">]</span></code></pre>
+  </section>
+
+  <!-- GET /movies/{id}/companies -->
+  <section id="get-movie-companies" class="endpoint-section">
+    <div class="endpoint-title">
+      <span class="method-badge">GET</span>
+      <span class="endpoint-path">/movies/{id}/companies</span>
+      <a class="try-link" href="https://rma.finlab.rs/movies/tt0111161/companies" target="_blank" rel="noopener">Try it &rarr;</a>
+    </div>
+    <p>Returns production companies for a movie. This endpoint is <strong>not</strong> paginated and returns a plain array.</p>
+
+    <h3>Path Parameters</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>id</code></td><td>String</td><td>The IMDb ID of the movie.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Response: Array of <code>ProductionCompany</code> objects</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>id</code></td><td>Integer</td><td>Company ID.</td></tr>
+        <tr><td><code>name</code></td><td>String</td><td>Company name.</td></tr>
+        <tr><td><code>logoPath</code></td><td>String?</td><td>Company logo image path.</td></tr>
+        <tr><td><code>originCountry</code></td><td>String?</td><td>ISO 3166-1 country code (e.g., <code>"US"</code>).</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Example request</h3>
+    <pre><code>GET https://rma.finlab.rs/movies/tt0111161/companies</code></pre>
+
+    <h3>Example response</h3>
+    <pre><code><span class="json-bracket">[</span>
+    {
+        <span class="json-key">"id"</span>: <span class="json-number">97</span>,
+        <span class="json-key">"name"</span>: <span class="json-string">"Castle Rock Entertainment"</span>,
+        <span class="json-key">"logoPath"</span>: <span class="json-string">"/smyTD67uNsdaySnnjVDmh0kyotp.png"</span>,
+        <span class="json-key">"originCountry"</span>: <span class="json-string">"US"</span>
+    }
+<span class="json-bracket">]</span></code></pre>
+  </section>
+
+  <!-- GET /people/{id} -->
+  <section id="get-person" class="endpoint-section">
+    <div class="endpoint-title">
+      <span class="method-badge">GET</span>
+      <span class="endpoint-path">/people/{id}</span>
+      <a class="try-link" href="https://rma.finlab.rs/people/nm0000209" target="_blank" rel="noopener">Try it &rarr;</a>
+    </div>
+    <p>Returns details about a person (actor, director, writer, etc.) along with the movies they are associated with.</p>
+
+    <h3>Path Parameters</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>id</code></td><td>String</td><td>The IMDb ID of the person (e.g., <code>nm0000209</code>).</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Response: <code>PersonDetail</code> object</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>person</code></td><td>Object</td><td>The person's details (see below).</td></tr>
+        <tr><td><code>movies</code></td><td>Array</td><td>List of <code>MovieListItem</code> objects the person is associated with, sorted by IMDb votes (descending).</td></tr>
+      </tbody>
+    </table></div>
+
+    <p><strong>Person object:</strong></p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>imdbId</code></td><td>String</td><td>IMDb identifier.</td></tr>
+        <tr><td><code>tmdbId</code></td><td>Integer?</td><td>TMDB identifier.</td></tr>
+        <tr><td><code>name</code></td><td>String</td><td>Full name.</td></tr>
+        <tr><td><code>birthYear</code></td><td>Integer?</td><td>Year of birth.</td></tr>
+        <tr><td><code>deathYear</code></td><td>Integer?</td><td>Year of death (if applicable).</td></tr>
+        <tr><td><code>professions</code></td><td>String?</td><td>Comma-separated professions (e.g., <code>"actor,producer,director"</code>).</td></tr>
+        <tr><td><code>department</code></td><td>String?</td><td>Primary department.</td></tr>
+        <tr><td><code>popularity</code></td><td>Float?</td><td>TMDB popularity score.</td></tr>
+        <tr><td><code>profilePath</code></td><td>String?</td><td>Profile image path.</td></tr>
+        <tr><td><code>gender</code></td><td>Integer?</td><td>Gender code (1 = Female, 2 = Male, 0 = Not specified).</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Example request</h3>
+    <pre><code>GET https://rma.finlab.rs/people/nm0000209</code></pre>
+
+    <h3>Example response</h3>
+    <pre><code>{
+    <span class="json-key">"person"</span>: {
+        <span class="json-key">"imdbId"</span>: <span class="json-string">"nm0000209"</span>,
+        <span class="json-key">"tmdbId"</span>: <span class="json-number">504</span>,
+        <span class="json-key">"name"</span>: <span class="json-string">"Tim Robbins"</span>,
+        <span class="json-key">"birthYear"</span>: <span class="json-number">1958</span>,
+        <span class="json-key">"professions"</span>: <span class="json-string">"actor,producer,director"</span>,
+        <span class="json-key">"department"</span>: <span class="json-string">"Acting"</span>,
+        <span class="json-key">"popularity"</span>: <span class="json-number">3.2837</span>,
+        <span class="json-key">"profilePath"</span>: <span class="json-string">"/3FfJMIVwXgsIXbAT8ECBSZJAncR.jpg"</span>,
+        <span class="json-key">"gender"</span>: <span class="json-number">2</span>
+    },
+    <span class="json-key">"movies"</span>: <span class="json-bracket">[</span>
+        {
+            <span class="json-key">"imdbId"</span>: <span class="json-string">"tt0111161"</span>,
+            <span class="json-key">"title"</span>: <span class="json-string">"The Shawshank Redemption"</span>,
+            <span class="json-key">"year"</span>: <span class="json-number">1994</span>,
+            <span class="json-key">"imdbRating"</span>: <span class="json-number">9.3</span>,
+            <span class="json-key">"imdbVotes"</span>: <span class="json-number">3171582</span>,
+            <span class="json-key">"posterPath"</span>: <span class="json-string">"/9cqNxx0GxF0bflZmeSMuL5tnGzr.jpg"</span>,
+            <span class="json-key">"genres"</span>: <span class="json-bracket">[</span>
+                { <span class="json-key">"id"</span>: <span class="json-number">18</span>, <span class="json-key">"name"</span>: <span class="json-string">"Drama"</span> },
+                { <span class="json-key">"id"</span>: <span class="json-number">80</span>, <span class="json-key">"name"</span>: <span class="json-string">"Crime"</span> }
+            <span class="json-bracket">]</span>
+        },
+        {
+            <span class="json-key">"imdbId"</span>: <span class="json-string">"tt0327056"</span>,
+            <span class="json-key">"title"</span>: <span class="json-string">"Mystic River"</span>,
+            <span class="json-key">"year"</span>: <span class="json-number">2003</span>,
+            <span class="json-key">"imdbRating"</span>: <span class="json-number">7.9</span>,
+            <span class="json-key">"imdbVotes"</span>: <span class="json-number">520576</span>,
+            <span class="json-key">"posterPath"</span>: <span class="json-string">"/hCHVDbo6XJGj3r2i4hVjKhE0GKF.jpg"</span>,
+            <span class="json-key">"genres"</span>: <span class="json-bracket">[</span>
+                { <span class="json-key">"id"</span>: <span class="json-number">18</span>, <span class="json-key">"name"</span>: <span class="json-string">"Drama"</span> },
+                { <span class="json-key">"id"</span>: <span class="json-number">53</span>, <span class="json-key">"name"</span>: <span class="json-string">"Thriller"</span> },
+                { <span class="json-key">"id"</span>: <span class="json-number">80</span>, <span class="json-key">"name"</span>: <span class="json-string">"Crime"</span> },
+                { <span class="json-key">"id"</span>: <span class="json-number">9648</span>, <span class="json-key">"name"</span>: <span class="json-string">"Mystery"</span> }
+            <span class="json-bracket">]</span>
+        }
+    <span class="json-bracket">]</span>
+}</code></pre>
+  </section>
+
+  <!-- GET /genres -->
+  <section id="get-genres" class="endpoint-section">
+    <div class="endpoint-title">
+      <span class="method-badge">GET</span>
+      <span class="endpoint-path">/genres</span>
+      <a class="try-link" href="https://rma.finlab.rs/genres" target="_blank" rel="noopener">Try it &rarr;</a>
+    </div>
+    <p>Returns a list of all available genres, sorted alphabetically. This endpoint is <strong>not</strong> paginated.</p>
+
+    <h3>Response: Array of <code>Genre</code> objects</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>id</code></td><td>Integer</td><td>Genre ID (use this for filtering movies by genre).</td></tr>
+        <tr><td><code>name</code></td><td>String</td><td>Genre name.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Example request</h3>
+    <pre><code>GET https://rma.finlab.rs/genres</code></pre>
+
+    <h3>Example response</h3>
+    <pre><code><span class="json-bracket">[</span>
+    { <span class="json-key">"id"</span>: <span class="json-number">28</span>, <span class="json-key">"name"</span>: <span class="json-string">"Action"</span> },
+    { <span class="json-key">"id"</span>: <span class="json-number">12</span>, <span class="json-key">"name"</span>: <span class="json-string">"Adventure"</span> },
+    { <span class="json-key">"id"</span>: <span class="json-number">16</span>, <span class="json-key">"name"</span>: <span class="json-string">"Animation"</span> },
+    { <span class="json-key">"id"</span>: <span class="json-number">35</span>, <span class="json-key">"name"</span>: <span class="json-string">"Comedy"</span> },
+    { <span class="json-key">"id"</span>: <span class="json-number">80</span>, <span class="json-key">"name"</span>: <span class="json-string">"Crime"</span> },
+    { <span class="json-key">"id"</span>: <span class="json-number">18</span>, <span class="json-key">"name"</span>: <span class="json-string">"Drama"</span> },
+    { <span class="json-key">"id"</span>: <span class="json-number">10751</span>, <span class="json-key">"name"</span>: <span class="json-string">"Family"</span> },
+    { <span class="json-key">"id"</span>: <span class="json-number">14</span>, <span class="json-key">"name"</span>: <span class="json-string">"Fantasy"</span> },
+    { <span class="json-key">"id"</span>: <span class="json-number">36</span>, <span class="json-key">"name"</span>: <span class="json-string">"History"</span> },
+    { <span class="json-key">"id"</span>: <span class="json-number">27</span>, <span class="json-key">"name"</span>: <span class="json-string">"Horror"</span> },
+    { <span class="json-key">"id"</span>: <span class="json-number">10402</span>, <span class="json-key">"name"</span>: <span class="json-string">"Music"</span> },
+    { <span class="json-key">"id"</span>: <span class="json-number">9648</span>, <span class="json-key">"name"</span>: <span class="json-string">"Mystery"</span> },
+    { <span class="json-key">"id"</span>: <span class="json-number">10749</span>, <span class="json-key">"name"</span>: <span class="json-string">"Romance"</span> },
+    { <span class="json-key">"id"</span>: <span class="json-number">878</span>, <span class="json-key">"name"</span>: <span class="json-string">"Science Fiction"</span> },
+    { <span class="json-key">"id"</span>: <span class="json-number">53</span>, <span class="json-key">"name"</span>: <span class="json-string">"Thriller"</span> },
+    { <span class="json-key">"id"</span>: <span class="json-number">10752</span>, <span class="json-key">"name"</span>: <span class="json-string">"War"</span> },
+    { <span class="json-key">"id"</span>: <span class="json-number">37</span>, <span class="json-key">"name"</span>: <span class="json-string">"Western"</span> }
+<span class="json-bracket">]</span></code></pre>
+  </section>
+
+  <!-- GET /collections/{id} -->
+  <section id="get-collection" class="endpoint-section">
+    <div class="endpoint-title">
+      <span class="method-badge">GET</span>
+      <span class="endpoint-path">/collections/{id}</span>
+      <a class="try-link" href="https://rma.finlab.rs/collections/230" target="_blank" rel="noopener">Try it &rarr;</a>
+    </div>
+    <p>Returns details about a movie collection (franchise/series) and the movies within it.</p>
+
+    <h3>Path Parameters</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>id</code></td><td>Integer</td><td>The collection ID (found in the <code>collection</code> field of a movie detail response).</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Response: <code>CollectionDetail</code> object</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>collection</code></td><td>Object</td><td>Collection metadata: <code>{id, name, posterPath, backdropPath}</code>.</td></tr>
+        <tr><td><code>movies</code></td><td>Array</td><td>List of <code>MovieListItem</code> objects in the collection, sorted by year (ascending).</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Example request</h3>
+    <pre><code>GET https://rma.finlab.rs/collections/230</code></pre>
+
+    <h3>Example response</h3>
+    <pre><code>{
+    <span class="json-key">"collection"</span>: {
+        <span class="json-key">"id"</span>: <span class="json-number">230</span>,
+        <span class="json-key">"name"</span>: <span class="json-string">"The Godfather Collection"</span>,
+        <span class="json-key">"posterPath"</span>: <span class="json-string">"/7xkVZBP9k7Q0965kLunWXptermW.jpg"</span>,
+        <span class="json-key">"backdropPath"</span>: <span class="json-string">"/ipMInu8Ymcl0m47M5585KPh3kOn.jpg"</span>
+    },
+    <span class="json-key">"movies"</span>: <span class="json-bracket">[</span>
+        {
+            <span class="json-key">"imdbId"</span>: <span class="json-string">"tt0068646"</span>,
+            <span class="json-key">"title"</span>: <span class="json-string">"The Godfather"</span>,
+            <span class="json-key">"year"</span>: <span class="json-number">1972</span>,
+            <span class="json-key">"imdbRating"</span>: <span class="json-number">9.2</span>,
+            <span class="json-key">"imdbVotes"</span>: <span class="json-number">2215919</span>,
+            <span class="json-key">"posterPath"</span>: <span class="json-string">"/3bhkrj58Vtu7enYsRolD1fZdja1.jpg"</span>,
+            <span class="json-key">"genres"</span>: <span class="json-bracket">[</span>
+                { <span class="json-key">"id"</span>: <span class="json-number">18</span>, <span class="json-key">"name"</span>: <span class="json-string">"Drama"</span> },
+                { <span class="json-key">"id"</span>: <span class="json-number">80</span>, <span class="json-key">"name"</span>: <span class="json-string">"Crime"</span> }
+            <span class="json-bracket">]</span>
+        },
+        {
+            <span class="json-key">"imdbId"</span>: <span class="json-string">"tt0071562"</span>,
+            <span class="json-key">"title"</span>: <span class="json-string">"The Godfather Part II"</span>,
+            <span class="json-key">"year"</span>: <span class="json-number">1974</span>,
+            <span class="json-key">"imdbRating"</span>: <span class="json-number">9.0</span>,
+            <span class="json-key">"imdbVotes"</span>: <span class="json-number">1488902</span>,
+            <span class="json-key">"posterPath"</span>: <span class="json-string">"/hek3koDUyRQk7FIhPXsa6mT2Zc3.jpg"</span>,
+            <span class="json-key">"genres"</span>: <span class="json-bracket">[</span>
+                { <span class="json-key">"id"</span>: <span class="json-number">18</span>, <span class="json-key">"name"</span>: <span class="json-string">"Drama"</span> },
+                { <span class="json-key">"id"</span>: <span class="json-number">80</span>, <span class="json-key">"name"</span>: <span class="json-string">"Crime"</span> }
+            <span class="json-bracket">]</span>
+        },
+        {
+            <span class="json-key">"imdbId"</span>: <span class="json-string">"tt0099674"</span>,
+            <span class="json-key">"title"</span>: <span class="json-string">"The Godfather Part III"</span>,
+            <span class="json-key">"year"</span>: <span class="json-number">1990</span>,
+            <span class="json-key">"imdbRating"</span>: <span class="json-number">7.5</span>,
+            <span class="json-key">"imdbVotes"</span>: <span class="json-number">453856</span>,
+            <span class="json-key">"posterPath"</span>: <span class="json-string">"/lm3pQ2QoQ16pextRsmnUbG2onES.jpg"</span>,
+            <span class="json-key">"genres"</span>: <span class="json-bracket">[</span>
+                { <span class="json-key">"id"</span>: <span class="json-number">18</span>, <span class="json-key">"name"</span>: <span class="json-string">"Drama"</span> },
+                { <span class="json-key">"id"</span>: <span class="json-number">53</span>, <span class="json-key">"name"</span>: <span class="json-string">"Thriller"</span> },
+                { <span class="json-key">"id"</span>: <span class="json-number">80</span>, <span class="json-key">"name"</span>: <span class="json-string">"Crime"</span> }
+            <span class="json-bracket">]</span>
+        }
+    <span class="json-bracket">]</span>
+}</code></pre>
+  </section>
+
+  <!-- GET /config -->
+  <section id="get-config" class="endpoint-section">
+    <div class="endpoint-title">
+      <span class="method-badge">GET</span>
+      <span class="endpoint-path">/config</span>
+      <a class="try-link" href="https://rma.finlab.rs/config" target="_blank" rel="noopener">Try it &rarr;</a>
+    </div>
+    <p>Returns image configuration entries needed to construct full image URLs. This endpoint is <strong>not</strong> paginated.</p>
+
+    <h3>Response: Array of <code>ConfigEntry</code> objects</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>key</code></td><td>String</td><td>Configuration key name.</td></tr>
+        <tr><td><code>value</code></td><td>String</td><td>Configuration value (comma-separated for size lists).</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Example request</h3>
+    <pre><code>GET https://rma.finlab.rs/config</code></pre>
+
+    <h3>Example response</h3>
+    <pre><code><span class="json-bracket">[</span>
+    { <span class="json-key">"key"</span>: <span class="json-string">"image_base_url"</span>, <span class="json-key">"value"</span>: <span class="json-string">"https://image.tmdb.org/t/p/"</span> },
+    { <span class="json-key">"key"</span>: <span class="json-string">"poster_sizes"</span>, <span class="json-key">"value"</span>: <span class="json-string">"w92,w154,w185,w342,w500,w780,original"</span> },
+    { <span class="json-key">"key"</span>: <span class="json-string">"backdrop_sizes"</span>, <span class="json-key">"value"</span>: <span class="json-string">"w300,w780,w1280,original"</span> },
+    { <span class="json-key">"key"</span>: <span class="json-string">"profile_sizes"</span>, <span class="json-key">"value"</span>: <span class="json-string">"w45,w185,h632,original"</span> },
+    { <span class="json-key">"key"</span>: <span class="json-string">"logo_sizes"</span>, <span class="json-key">"value"</span>: <span class="json-string">"w45,w92,w154,w185,w300,w500,original"</span> }
+<span class="json-bracket">]</span></code></pre>
+  </section>
+
+  <!-- Quick Reference -->
+  <section id="quick-reference">
+    <h2>Quick Reference</h2>
+    <div class="table-wrap"><table class="qr-table">
+      <thead><tr><th>Endpoint</th><th>Method</th><th>Paginated</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>/</code></td>
+          <td><span class="method-badge">GET</span></td>
+          <td><span class="qr-paginated qr-no">No</span></td>
+          <td>API version info.</td>
+        </tr>
+        <tr>
+          <td><code>/movies</code></td>
+          <td><span class="method-badge">GET</span></td>
+          <td><span class="qr-paginated qr-yes">Yes</span></td>
+          <td>List/search/filter movies.</td>
+        </tr>
+        <tr>
+          <td><code>/movies/{id}</code></td>
+          <td><span class="method-badge">GET</span></td>
+          <td><span class="qr-paginated qr-no">No</span></td>
+          <td>Movie details.</td>
+        </tr>
+        <tr>
+          <td><code>/movies/{id}/cast</code></td>
+          <td><span class="method-badge">GET</span></td>
+          <td><span class="qr-paginated qr-yes">Yes</span></td>
+          <td>Cast and crew for a movie.</td>
+        </tr>
+        <tr>
+          <td><code>/movies/{id}/images</code></td>
+          <td><span class="method-badge">GET</span></td>
+          <td><span class="qr-paginated qr-no">No</span></td>
+          <td>Posters, backdrops, and logos.</td>
+        </tr>
+        <tr>
+          <td><code>/movies/{id}/videos</code></td>
+          <td><span class="method-badge">GET</span></td>
+          <td><span class="qr-paginated qr-no">No</span></td>
+          <td>Trailers and other videos.</td>
+        </tr>
+        <tr>
+          <td><code>/movies/{id}/companies</code></td>
+          <td><span class="method-badge">GET</span></td>
+          <td><span class="qr-paginated qr-no">No</span></td>
+          <td>Production companies.</td>
+        </tr>
+        <tr>
+          <td><code>/people/{id}</code></td>
+          <td><span class="method-badge">GET</span></td>
+          <td><span class="qr-paginated qr-no">No</span></td>
+          <td>Person details and filmography.</td>
+        </tr>
+        <tr>
+          <td><code>/genres</code></td>
+          <td><span class="method-badge">GET</span></td>
+          <td><span class="qr-paginated qr-no">No</span></td>
+          <td>All available genres.</td>
+        </tr>
+        <tr>
+          <td><code>/collections/{id}</code></td>
+          <td><span class="method-badge">GET</span></td>
+          <td><span class="qr-paginated qr-no">No</span></td>
+          <td>Collection details and movies.</td>
+        </tr>
+        <tr>
+          <td><code>/config</code></td>
+          <td><span class="method-badge">GET</span></td>
+          <td><span class="qr-paginated qr-no">No</span></td>
+          <td>Image URL configuration.</td>
+        </tr>
+      </tbody>
+    </table></div>
+  </section>
+
+</main>
+
+<!-- ── Sidebar toggle (mobile) ────────────────────────────── -->
+<script>
+function toggleSidebar() {
+  document.querySelector('.sidebar').classList.toggle('open');
+  document.querySelector('.sidebar-backdrop').classList.toggle('open');
+}
+// Close sidebar when a nav link is clicked (mobile)
+document.querySelectorAll('.sidebar a').forEach(function(link) {
+  link.addEventListener('click', function() {
+    document.querySelector('.sidebar').classList.remove('open');
+    document.querySelector('.sidebar-backdrop').classList.remove('open');
+  });
+});
+// Highlight active sidebar link on scroll
+(function() {
+  var links = document.querySelectorAll('.sidebar a[href^="#"]');
+  var sections = [];
+  links.forEach(function(a) {
+    var id = a.getAttribute('href').slice(1);
+    var el = document.getElementById(id);
+    if (el) sections.push({ el: el, link: a });
+  });
+  function onScroll() {
+    var scrollY = window.scrollY + 100;
+    var current = null;
+    for (var i = sections.length - 1; i >= 0; i--) {
+      if (sections[i].el.offsetTop <= scrollY) { current = sections[i]; break; }
+    }
+    links.forEach(function(l) { l.classList.remove('active'); });
+    if (current) current.link.classList.add('active');
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+})();
+</script>
+</body>
+</html>

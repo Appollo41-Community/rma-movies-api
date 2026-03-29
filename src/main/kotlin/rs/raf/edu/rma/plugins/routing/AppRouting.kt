@@ -29,5 +29,9 @@ fun Application.configureRouting() {
         staticResources("/demo", "static") {
             default("demo.html")
         }
+
+        staticResources("/docs", "static") {
+            default("docs.html")
+        }
     }
 }
