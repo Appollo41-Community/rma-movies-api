@@ -474,13 +474,14 @@ body {
 .info-badge .badge-label { font-size: 10px; color: #999; margin-bottom: 2px; }
 .info-badge .badge-value { font-size: 13px; font-weight: 700; color: #fff; }
 
-.images-row { display: flex; gap: 8px; margin-bottom: 8px; }
+.images-row { display: flex; gap: 8px; margin-bottom: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
 .images-row img {
-  flex: 1;
+  width: 160px;
   height: 90px;
   object-fit: cover;
   border-radius: 8px;
   background: #2a2a3e;
+  flex-shrink: 0;
 }
 
 .actor-item {
@@ -827,7 +828,7 @@ async function openDetail(id) {
     const videos = await videosRes.json();
 
     const actors = castData.items.filter(p => p.department === 'Acting').slice(0, 10);
-    const backdrops = imagesData.backdrops ? imagesData.backdrops.slice(0, 3) : [];
+    const backdrops = imagesData.backdrops ? imagesData.backdrops.slice(0, 6) : [];
     const trailer = videos.find(v => v.site === 'YouTube');
 
     const backdropUrl = movie.backdropPath ? IMG + 'w780' + movie.backdropPath : '';
