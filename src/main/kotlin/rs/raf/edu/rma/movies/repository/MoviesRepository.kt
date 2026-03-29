@@ -14,6 +14,9 @@ class MoviesRepository(private val database: Database) {
         query: String? = null,
         sortBy: String = "imdb_votes",
         sortOrder: String = "desc",
+        minYear: Int? = null,
+        maxYear: Int? = null,
+        minRating: Float? = null,
     ): PaginatedResponse<MovieListItem> = transaction(database) {
         val baseQuery = if (genreId != null) {
             MoviesTable.innerJoin(MovieGenresTable, { MoviesTable.imdbId }, { MovieGenresTable.movieId })
@@ -27,6 +30,16 @@ class MoviesRepository(private val database: Database) {
         if (!query.isNullOrBlank()) {
             val sanitized = query.replace("%", "\\%").replace("_", "\\_")
             baseQuery.andWhere { MoviesTable.title like "%${sanitized}%" }
+        }
+
+        if (minYear != null) {
+            baseQuery.andWhere { MoviesTable.year greaterEq minYear }
+        }
+        if (maxYear != null) {
+            baseQuery.andWhere { MoviesTable.year lessEq maxYear }
+        }
+        if (minRating != null) {
+            baseQuery.andWhere { MoviesTable.imdbRating greaterEq minRating }
         }
 
         val totalItems = baseQuery.count().toInt()

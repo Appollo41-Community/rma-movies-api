@@ -15,6 +15,18 @@ fun ApplicationCall.intParamOrThrow(paramName: String): Int {
     }
 }
 
+fun ApplicationCall.optionalIntQueryParam(name: String): Int? {
+    val raw = request.queryParameters[name] ?: return null
+    return raw.toIntOrNull()
+        ?: throw AppException.BadRequestException("$name must be a valid integer")
+}
+
+fun ApplicationCall.optionalFloatQueryParam(name: String): Float? {
+    val raw = request.queryParameters[name] ?: return null
+    return raw.toFloatOrNull()
+        ?: throw AppException.BadRequestException("$name must be a valid number")
+}
+
 fun ApplicationCall.stringParamOrThrow(paramName: String): String {
     val paramValue = parameters[paramName]
 
