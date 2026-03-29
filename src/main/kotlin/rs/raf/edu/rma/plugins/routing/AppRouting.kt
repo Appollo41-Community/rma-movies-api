@@ -26,12 +26,16 @@ fun Application.configureRouting() {
         collectionsRouting(path = "collections")
         configRouting(path = "config")
 
-        staticResources("/demo", "static") {
+        staticResources("/docs", "static/docs") {
+            default("docs.html")
+        }
+
+        staticResources("/premiere/demo", "static/premiere") {
             default("demo.html")
         }
 
-        staticResources("/docs", "static") {
-            default("docs.html")
+        staticResources("/premiere/spec", "static/premiere") {
+            default("spec.html")
         }
     }
 }
