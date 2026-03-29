@@ -1,6 +1,7 @@
 package rs.raf.edu.rma.plugins.routing
 
 import io.ktor.server.application.*
+import io.ktor.server.http.content.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import rs.raf.edu.rma.core.readReleaseVersion
@@ -24,5 +25,9 @@ fun Application.configureRouting() {
         genresRouting(path = "genres")
         collectionsRouting(path = "collections")
         configRouting(path = "config")
+
+        staticResources("/demo", "static") {
+            default("demo.html")
+        }
     }
 }
