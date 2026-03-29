@@ -1,0 +1,1 @@
+web: ./build/install/rma-movies-api/bin/rma-movies-api

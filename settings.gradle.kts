@@ -1,0 +1,1 @@
+rootProject.name = "rma-movies-api"
