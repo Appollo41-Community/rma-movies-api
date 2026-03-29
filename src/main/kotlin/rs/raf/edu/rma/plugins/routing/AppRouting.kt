@@ -1,5 +1,6 @@
 package rs.raf.edu.rma.plugins.routing
 
+import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.http.content.*
 import io.ktor.server.response.*
@@ -26,16 +27,22 @@ fun Application.configureRouting() {
         collectionsRouting(path = "collections")
         configRouting(path = "config")
 
-        staticResources("/docs", "static/docs") {
-            default("docs.html")
+        get("/docs") {
+            val html = this::class.java.classLoader.getResource("static/docs.html")?.readText()
+                ?: return@get call.respond(HttpStatusCode.NotFound)
+            call.respondText(html, ContentType.Text.Html)
         }
 
-        staticResources("/premiere/demo", "static/premiere") {
-            default("demo.html")
+        get("/premiere/demo") {
+            val html = this::class.java.classLoader.getResource("static/premiere/demo.html")?.readText()
+                ?: return@get call.respond(HttpStatusCode.NotFound)
+            call.respondText(html, ContentType.Text.Html)
         }
 
-        staticResources("/premiere/spec", "static/premiere") {
-            default("spec.html")
+        get("/premiere/spec") {
+            val html = this::class.java.classLoader.getResource("static/premiere/spec.html")?.readText()
+                ?: return@get call.respond(HttpStatusCode.NotFound)
+            call.respondText(html, ContentType.Text.Html)
         }
     }
 }
