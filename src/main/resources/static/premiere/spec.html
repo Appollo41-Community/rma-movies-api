@@ -165,6 +165,7 @@
             max-width: 800px;
         }
 
+
         .hero-eyebrow {
             font-size: 13px;
             font-weight: 600;
@@ -761,7 +762,7 @@
         <h3 id="movies-list-screen"><span class="screen-num">1</span>Movies List Screen (Lista Filmova)</h3>
 
         <p>Ekran koji prikazuje listu filmova učitanih sa API-ja.</p>
-        <p>Prilikom pokretanja, ekran učitava fiksiran skup filmova (30 filmova, sortirano po IMDB rejtingu opadajuće). Rezultati se prikazuju u skrolabilnom <code>Column</code>-u.</p>
+        <p>Prilikom pokretanja, ekran učitava fiksiran skup filmova (30 filmova, sortirano po IMDB rejtingu opadajuće). Rezultati se mogu prikazati u skrolabilnom <code>Column</code>-u ili u <code>LazyColumn</code>-u — izbor je na autoru. Napomena: korišćenje <code>LazyColumn</code>-a ili bilo kog drugog lazy composable-a je u potpunosti opciono za ovaj projekat.</p>
 
         <h4>Stavke liste (list items) treba da sadrže:</h4>
         <ul class="letter-list">
@@ -827,7 +828,7 @@
             <li><strong>žanrovske oznake</strong> prikazane kao chips,</li>
             <li><strong>overview</strong> &mdash; kompletan opis filma,</li>
             <li><strong>info bedževi</strong> &mdash; najmanje 4 informativna bedža prikazana kao male kartice. Koristiti polja kao što su: budget, revenue, language, popularity. Autoru se ostavlja sloboda da izabere koja polja će prikazati i kako će dizajnirati bedževe,</li>
-            <li><strong>slike</strong> &mdash; 2&ndash;3 backdrop slike prikazane u redu,</li>
+            <li><strong>slike</strong> &mdash; 2&ndash;3 backdrop slike prikazane u horizontalno skrolabilnom redu (scrollable <code>Row</code>),</li>
             <li><strong>glumci</strong> &mdash; vertikalna lista glumaca iz filmske postave. Svaka stavka prikazuje profilnu fotografiju i ime glumca. Prikazati približno prvih 10 glumaca.</li>
         </ul>
 
@@ -1004,8 +1005,14 @@
 
         <div class="callout">
             <ul>
-                <li>Projekat se radi individualno. Rok za izradu projekta je odbrana projekta.</li>
-                <li>Prvi projekat se brani u trećoj kolokvijumskoj nedelji. O tačnom terminu treće kolokvijumske nedelje obavestiće nas Fakultet čim se za tako nešto steknu uslovi.</li>
+                <li>Projekat se radi individualno.</li>
+                <li>Projekat se brani isključivo u trećoj kolokvijumskoj nedelji.</li>
+                <li>Rok za izradu projekta je termin odbrane projekta.</li>
+                <li>Datum odbrane u trećoj kolokvijumskoj nedelji određuje Fakultet.</li>
+                <li>Raspored odbrana biće objavljen dan ranije.</li>
+                <li>Odbrana traje oko 10-20 minuta po studentu.</li>
+                <li>Pre objavljivanja rasporeda odbrana dobićete upitnik gde možete da navedete termine u kojima Vam odgovara odbrana — u slučaju da imate istog dana i druge kolokvijumske obaveze.</li>
+                <li>Ne postoji mogućnost popravnog prvog projekta u drugim kolokvijumskim nedeljama ili ispitnim rokovima.</li>
             </ul>
         </div>
 
