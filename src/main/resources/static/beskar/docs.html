@@ -1,0 +1,1495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Beskar API Documentation</title>
+<style>
+  /* ── Reset & base ─────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; scroll-padding-top: 72px; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #24292f;
+    background: #f6f8fa;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Accent palette ───────────────────────────────────────── */
+  :root {
+    --accent: #b8860b;
+    --accent-light: #fff3cd;
+    --accent-bg: #fffbf0;
+    --bg: #ffffff;
+    --sidebar-bg: #f6f8fa;
+    --border: #d0d7de;
+    --code-bg: #1b1f24;
+    --code-fg: #e6edf3;
+    --inline-code-bg: #eff1f3;
+    --header-bg: #ffffff;
+    --text: #24292f;
+    --text-muted: #57606a;
+    --sidebar-w: 280px;
+    --header-h: 60px;
+  }
+
+  /* ── Sticky header ────────────────────────────────────────── */
+  .site-header {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    height: var(--header-h);
+    background: var(--header-bg);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center;
+    padding: 0 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+  }
+  .site-header .logo {
+    font-size: 18px; font-weight: 700; color: var(--accent);
+    letter-spacing: -.3px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .site-header .logo svg { flex-shrink: 0; }
+  .site-header .version {
+    font-size: 12px; font-weight: 500;
+    background: var(--accent-light); color: var(--accent);
+    padding: 2px 8px; border-radius: 12px; margin-left: 8px;
+  }
+  .hamburger {
+    display: none; background: none; border: none; cursor: pointer;
+    margin-right: 12px; padding: 4px; color: var(--text);
+  }
+
+  /* ── Sidebar ──────────────────────────────────────────────── */
+  .sidebar {
+    position: fixed; top: var(--header-h); left: 0; bottom: 0;
+    width: var(--sidebar-w);
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 20px 0;
+    z-index: 90;
+    transition: transform .25s ease;
+  }
+  .sidebar-backdrop {
+    display: none; position: fixed; inset: 0; z-index: 89;
+    background: rgba(0,0,0,.35);
+  }
+  .sidebar h4 {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: .8px; color: var(--text-muted);
+    padding: 8px 20px 4px;
+  }
+  .sidebar a {
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 20px; font-size: 14px;
+    color: var(--text-muted); text-decoration: none;
+    border-left: 3px solid transparent;
+    transition: all .15s;
+  }
+  .sidebar a:hover,
+  .sidebar a.active {
+    color: var(--accent); background: var(--accent-bg);
+    border-left-color: var(--accent);
+  }
+  .sidebar a code {
+    font-size: 13px; font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    background: var(--inline-code-bg); padding: 1px 5px; border-radius: 4px;
+  }
+  .sidebar a:hover code, .sidebar a.active code {
+    background: var(--accent-light);
+  }
+  .sidebar .method-sm {
+    display: inline-block;
+    font-size: 9px; font-weight: 700; text-transform: uppercase;
+    padding: 1px 5px; border-radius: 8px;
+    color: #fff; letter-spacing: .3px; line-height: 1.4;
+    flex-shrink: 0;
+  }
+  .sidebar .method-sm.get    { background: var(--accent); }
+  .sidebar .method-sm.post   { background: #2563eb; }
+  .sidebar .method-sm.put    { background: #ea580c; }
+  .sidebar .method-sm.delete { background: #dc2626; }
+
+  /* ── Main content ─────────────────────────────────────────── */
+  .main {
+    margin-left: var(--sidebar-w);
+    margin-top: var(--header-h);
+    padding: 40px 48px 80px;
+    max-width: 920px;
+  }
+
+  /* ── Typography ───────────────────────────────────────────── */
+  h1 { font-size: 32px; font-weight: 700; color: var(--accent); margin-bottom: 8px; }
+  h1 + .subtitle { color: var(--text-muted); font-size: 16px; margin-bottom: 32px; }
+  h2 {
+    font-size: 24px; font-weight: 700; color: var(--text);
+    margin-top: 48px; margin-bottom: 16px;
+    padding-bottom: 8px; border-bottom: 2px solid var(--accent-light);
+  }
+  h3 {
+    font-size: 18px; font-weight: 600; color: var(--text);
+    margin-top: 32px; margin-bottom: 12px;
+  }
+  p { margin-bottom: 14px; }
+  strong { font-weight: 600; }
+  a { color: var(--accent); }
+
+  /* ── Endpoint header ──────────────────────────────────────── */
+  .endpoint-section {
+    margin-top: 48px;
+    padding-top: 32px;
+    border-top: 1px solid var(--border);
+  }
+  .endpoint-section:first-of-type { border-top: none; padding-top: 0; }
+  .endpoint-title {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+  .method-badge {
+    display: inline-block;
+    font-size: 12px; font-weight: 700; text-transform: uppercase;
+    padding: 3px 10px; border-radius: 12px;
+    color: #fff;
+    letter-spacing: .4px; line-height: 1.4;
+  }
+  .method-badge.get    { background: var(--accent); }
+  .method-badge.post   { background: #2563eb; }
+  .method-badge.put    { background: #ea580c; }
+  .method-badge.delete { background: #dc2626; }
+  .endpoint-path {
+    font-size: 18px; font-weight: 600;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    color: var(--text);
+  }
+  .try-link {
+    font-size: 13px; font-weight: 500;
+    color: var(--accent); text-decoration: none;
+    border: 1px solid var(--accent); border-radius: 6px;
+    padding: 3px 10px; margin-left: auto;
+    transition: all .15s;
+    white-space: nowrap;
+  }
+  .try-link:hover { background: var(--accent); color: #fff; }
+
+  /* ── Inline code ──────────────────────────────────────────── */
+  code {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 0.875em;
+    background: var(--inline-code-bg);
+    padding: 2px 6px; border-radius: 4px;
+  }
+
+  /* ── Code blocks (dark) ───────────────────────────────────── */
+  pre {
+    background: var(--code-bg);
+    color: var(--code-fg);
+    padding: 18px 20px;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin-bottom: 16px;
+    font-size: 13.5px;
+    line-height: 1.55;
+    position: relative;
+  }
+  pre code {
+    background: none; padding: 0; border-radius: 0;
+    color: inherit; font-size: inherit;
+  }
+  /* JSON syntax colours */
+  pre .json-key { color: #79c0ff; }
+  pre .json-string { color: #a5d6ff; }
+  pre .json-number { color: #f0883e; }
+  pre .json-bool, pre .json-null { color: #ff7b72; }
+  pre .json-bracket { color: #8b949e; }
+  pre .json-url { color: #a5d6ff; }
+
+  /* ── Tables ───────────────────────────────────────────────── */
+  .table-wrap { overflow-x: auto; margin-bottom: 16px; }
+  table {
+    width: 100%; border-collapse: collapse;
+    font-size: 14px;
+  }
+  th {
+    text-align: left; font-weight: 600;
+    background: var(--accent-bg); color: var(--text);
+    padding: 10px 14px;
+    border-bottom: 2px solid var(--accent-light);
+  }
+  td {
+    padding: 9px 14px; border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  tr:last-child td { border-bottom: none; }
+  td code { font-size: 13px; }
+
+  /* ── Info boxes ───────────────────────────────────────────── */
+  .tip {
+    background: var(--accent-bg);
+    border-left: 4px solid var(--accent);
+    padding: 12px 16px;
+    border-radius: 0 6px 6px 0;
+    margin-bottom: 16px;
+    font-size: 14px;
+  }
+  .tip strong { color: var(--accent); }
+
+  .formula-box {
+    background: var(--accent-bg);
+    border: 1px solid var(--accent-light);
+    padding: 14px 18px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 14px;
+    color: var(--accent);
+    text-align: center;
+  }
+
+  /* ── Meta list (base url, auth, etc.) ─────────────────────── */
+  .meta-list { list-style: none; margin-bottom: 24px; }
+  .meta-list li {
+    padding: 6px 0; font-size: 15px;
+    display: flex; gap: 8px; align-items: baseline;
+  }
+  .meta-list li strong { min-width: 155px; flex-shrink: 0; }
+
+  /* ── Quick-ref table ──────────────────────────────────────── */
+  .qr-table td:first-child code { font-weight: 600; }
+  .qr-paginated { display: inline-block; font-size: 11px; font-weight: 600;
+    padding: 2px 7px; border-radius: 10px; }
+  .qr-yes { background: var(--accent-light); color: var(--accent); }
+  .qr-no  { background: var(--inline-code-bg); color: var(--text-muted); }
+
+  /* ── Responsive ───────────────────────────────────────────── */
+  @media (max-width: 860px) {
+    .sidebar { transform: translateX(-100%); }
+    .sidebar.open { transform: translateX(0); }
+    .sidebar-backdrop.open { display: block; }
+    .main { margin-left: 0; padding: 28px 20px 60px; }
+    .hamburger { display: block; }
+    .endpoint-title { gap: 6px; }
+    .try-link { margin-left: 0; }
+  }
+  @media (max-width: 480px) {
+    h1 { font-size: 24px; }
+    h2 { font-size: 20px; }
+    pre { font-size: 12.5px; padding: 14px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── Header ──────────────────────────────────────────────── -->
+<header class="site-header">
+  <button class="hamburger" onclick="toggleSidebar()" aria-label="Toggle navigation">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+  <div class="logo">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#b8860b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+    Beskar API
+    <span class="version">v1.0.0</span>
+  </div>
+</header>
+
+<!-- ── Sidebar backdrop (mobile) ──────────────────────────── -->
+<div class="sidebar-backdrop" onclick="toggleSidebar()"></div>
+
+<!-- ── Sidebar ─────────────────────────────────────────────── -->
+<nav class="sidebar">
+  <h4>Getting Started</h4>
+  <a href="#overview">Overview</a>
+  <a href="#pagination">Pagination</a>
+  <a href="#errors">Error Handling</a>
+
+  <h4>Posts</h4>
+  <a href="#get-posts"><span class="method-sm get">GET</span> <code>/beskar/posts</code></a>
+  <a href="#get-post"><span class="method-sm get">GET</span> <code>/beskar/posts/{id}</code></a>
+  <a href="#get-post-related"><span class="method-sm get">GET</span> <code>.../{id}/related</code></a>
+  <a href="#get-post-apod"><span class="method-sm get">GET</span> <code>.../posts/apod</code></a>
+  <a href="#get-post-random"><span class="method-sm get">GET</span> <code>.../posts/random</code></a>
+  <a href="#get-post-on-this-day"><span class="method-sm get">GET</span> <code>.../on-this-day</code></a>
+  <a href="#get-post-popular"><span class="method-sm get">GET</span> <code>.../posts/popular</code></a>
+
+  <h4>Reactions</h4>
+  <a href="#post-like"><span class="method-sm post">POST</span> <code>.../{id}/like</code></a>
+  <a href="#post-dislike"><span class="method-sm post">POST</span> <code>.../{id}/dislike</code></a>
+  <a href="#delete-like"><span class="method-sm delete">DEL</span> <code>.../{id}/like</code></a>
+  <a href="#delete-dislike"><span class="method-sm delete">DEL</span> <code>.../{id}/dislike</code></a>
+
+  <h4>Comments</h4>
+  <a href="#get-comments"><span class="method-sm get">GET</span> <code>.../{id}/comments</code></a>
+  <a href="#post-comment"><span class="method-sm post">POST</span> <code>.../{id}/comments</code></a>
+
+  <h4>Collections</h4>
+  <a href="#post-collection"><span class="method-sm post">POST</span> <code>.../collections</code></a>
+  <a href="#get-collection"><span class="method-sm get">GET</span> <code>.../collections/{id}</code></a>
+  <a href="#put-collection"><span class="method-sm put">PUT</span> <code>.../collections/{id}</code></a>
+
+  <h4>Categories</h4>
+  <a href="#get-categories"><span class="method-sm get">GET</span> <code>.../categories</code></a>
+  <a href="#get-categories-popular"><span class="method-sm get">GET</span> <code>.../categories/popular</code></a>
+
+  <h4>Stats</h4>
+  <a href="#get-stats"><span class="method-sm get">GET</span> <code>/beskar/stats</code></a>
+
+  <h4>Reference</h4>
+  <a href="#quick-reference">Quick Reference Table</a>
+</nav>
+
+<!-- ── Main ────────────────────────────────────────────────── -->
+<main class="main">
+
+  <!-- Overview -->
+  <section id="overview">
+    <h1>Beskar API Documentation</h1>
+    <p class="subtitle">An astronomy content API serving 11,200 NASA APOD entries (1995&ndash;2026) with posts, reactions, comments, collections, and categories. Named after the precious Mandalorian armor metal.</p>
+
+    <ul class="meta-list">
+      <li><strong>Base URL:</strong> <code>https://rma.finlab.rs</code></li>
+      <li><strong>Path prefix:</strong> All endpoints are under <code>/beskar/</code></li>
+      <li><strong>Authentication:</strong> None required &mdash; nickname-based identity for write operations</li>
+      <li><strong>Response format:</strong> JSON (<code>application/json</code>)</li>
+      <li><strong>HTTP Methods:</strong> <code>GET</code>, <code>POST</code>, <code>PUT</code>, <code>DELETE</code></li>
+    </ul>
+  </section>
+
+  <!-- Pagination -->
+  <section id="pagination">
+    <h2>Pagination</h2>
+    <p>Endpoints that return lists of items use a paginated response format. You control pagination with <code>page</code> and <code>page_size</code> query parameters.</p>
+
+    <p><strong>PaginatedResponse format:</strong></p>
+    <pre><code>{
+    <span class="json-key">"page"</span>: <span class="json-number">1</span>,
+    <span class="json-key">"pageSize"</span>: <span class="json-number">20</span>,
+    <span class="json-key">"totalItems"</span>: <span class="json-number">11200</span>,
+    <span class="json-key">"totalPages"</span>: <span class="json-number">560</span>,
+    <span class="json-key">"items"</span>: <span class="json-bracket">[</span> ... <span class="json-bracket">]</span>
+}</code></pre>
+
+    <div class="table-wrap"><table>
+      <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>page</code></td><td>Integer</td><td>The current page number (1-based).</td></tr>
+        <tr><td><code>pageSize</code></td><td>Integer</td><td>The number of items per page.</td></tr>
+        <tr><td><code>totalItems</code></td><td>Integer</td><td>Total number of items matching the query.</td></tr>
+        <tr><td><code>totalPages</code></td><td>Integer</td><td>Total number of pages available.</td></tr>
+        <tr><td><code>items</code></td><td>Array</td><td>The array of results for the current page.</td></tr>
+      </tbody>
+    </table></div>
+
+    <p><strong>Defaults:</strong> <code>page</code> = 1, <code>page_size</code> = 20. The maximum <code>page_size</code> is 100.</p>
+  </section>
+
+  <!-- Error Handling -->
+  <section id="errors">
+    <h2>Error Handling</h2>
+    <p>When something goes wrong, the API returns a JSON error response with an appropriate HTTP status code.</p>
+
+    <p><strong>Error response format:</strong></p>
+    <pre><code>{
+    <span class="json-key">"error"</span>: <span class="json-string">"undefined"</span>,
+    <span class="json-key">"httpCode"</span>: <span class="json-number">404</span>,
+    <span class="json-key">"message"</span>: <span class="json-string">"Post not found: 99999"</span>
+}</code></pre>
+
+    <div class="table-wrap"><table>
+      <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>error</code></td><td>String</td><td>Error type identifier.</td></tr>
+        <tr><td><code>httpCode</code></td><td>Integer</td><td>The HTTP status code.</td></tr>
+        <tr><td><code>message</code></td><td>String</td><td>A human-readable error message.</td></tr>
+        <tr><td><code>description</code></td><td>String?</td><td>Additional details about the error (optional).</td></tr>
+        <tr><td><code>suggestion</code></td><td>String?</td><td>A hint on how to fix the request (optional).</td></tr>
+      </tbody>
+    </table></div>
+
+    <p><strong>Common HTTP status codes:</strong></p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Code</th><th>Meaning</th><th>Example</th></tr></thead>
+      <tbody>
+        <tr><td><code>400</code></td><td>Bad Request</td><td>Invalid query parameter (e.g., <code>page_size=200</code>).</td></tr>
+        <tr><td><code>404</code></td><td>Not Found</td><td>Post, collection, or comment with the given ID does not exist.</td></tr>
+        <tr><td><code>409</code></td><td>Conflict</td><td>Duplicate reaction &mdash; user has already liked/disliked this post.</td></tr>
+        <tr><td><code>500</code></td><td>Internal Server Error</td><td>Unexpected server-side failure.</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <!-- ────────────────────────────────────────────────────────── -->
+  <!--  ENDPOINTS                                                 -->
+  <!-- ────────────────────────────────────────────────────────── -->
+  <h2 id="endpoints-heading">Endpoints</h2>
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!--  POSTS — READ                                              -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+
+  <!-- GET /beskar/posts -->
+  <section id="get-posts" class="endpoint-section">
+    <div class="endpoint-title">
+      <span class="method-badge get">GET</span>
+      <span class="endpoint-path">/beskar/posts</span>
+      <a class="try-link" href="https://rma.finlab.rs/beskar/posts?page_size=2" target="_blank" rel="noopener">Try it &rarr;</a>
+    </div>
+    <p>Returns a paginated list of posts. Supports searching, filtering by media type, category, and date range, as well as sorting.</p>
+
+    <h3>Query Parameters</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Description</th><th>Default</th></tr></thead>
+      <tbody>
+        <tr><td><code>page</code></td><td>Integer</td><td>Optional</td><td>Page number (must be &gt;= 1).</td><td><code>1</code></td></tr>
+        <tr><td><code>page_size</code></td><td>Integer</td><td>Optional</td><td>Items per page (1-100).</td><td><code>20</code></td></tr>
+        <tr><td><code>query</code></td><td>String</td><td>Optional</td><td>Search posts by title and description (case-insensitive substring match).</td><td>&mdash;</td></tr>
+        <tr><td><code>media_type</code></td><td>String</td><td>Optional</td><td>Filter by media type: <code>image</code> or <code>video</code>.</td><td>&mdash;</td></tr>
+        <tr><td><code>category_id</code></td><td>Integer</td><td>Optional</td><td>Filter by category ID (see <a href="#get-categories"><code>/beskar/categories</code></a>).</td><td>&mdash;</td></tr>
+        <tr><td><code>start_date</code></td><td>String</td><td>Optional</td><td>Filter posts on or after this date (<code>YYYY-MM-DD</code>).</td><td>&mdash;</td></tr>
+        <tr><td><code>end_date</code></td><td>String</td><td>Optional</td><td>Filter posts on or before this date (<code>YYYY-MM-DD</code>).</td><td>&mdash;</td></tr>
+        <tr><td><code>sort_by</code></td><td>String</td><td>Optional</td><td>Sort field. One of: <code>date</code>, <code>title</code>, <code>likes</code>, <code>dislikes</code>, <code>comments_count</code>.</td><td><code>date</code></td></tr>
+        <tr><td><code>sort_order</code></td><td>String</td><td>Optional</td><td>Sort direction: <code>asc</code> or <code>desc</code>.</td><td><code>desc</code></td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Response: <code>PaginatedResponse&lt;PostListItem&gt;</code></h3>
+    <p>Each item in the <code>items</code> array has this structure:</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>id</code></td><td>Integer</td><td>Unique post identifier.</td></tr>
+        <tr><td><code>title</code></td><td>String</td><td>Post title.</td></tr>
+        <tr><td><code>description</code></td><td>String</td><td>Truncated description (~150 characters).</td></tr>
+        <tr><td><code>mediaType</code></td><td>String</td><td>Media type: <code>"image"</code> or <code>"video"</code>.</td></tr>
+        <tr><td><code>imageUrl</code></td><td>String?</td><td>Standard resolution image URL (null for videos).</td></tr>
+        <tr><td><code>videoUrl</code></td><td>String?</td><td>Video embed URL (null for images).</td></tr>
+        <tr><td><code>thumbnailUrl</code></td><td>String?</td><td>Thumbnail URL (primarily for videos).</td></tr>
+        <tr><td><code>mediaAuthor</code></td><td>String</td><td>Author/credit for the media.</td></tr>
+        <tr><td><code>date</code></td><td>String</td><td>Original APOD date (<code>YYYY-MM-DD</code>).</td></tr>
+        <tr><td><code>likes</code></td><td>Integer</td><td>Total like count.</td></tr>
+        <tr><td><code>dislikes</code></td><td>Integer</td><td>Total dislike count.</td></tr>
+        <tr><td><code>commentsCount</code></td><td>Integer</td><td>Total number of comments.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Example &mdash; paginated list</h3>
+    <pre><code>GET https://rma.finlab.rs/beskar/posts?page_size=2</code></pre>
+    <pre><code>{
+    <span class="json-key">"page"</span>: <span class="json-number">1</span>,
+    <span class="json-key">"pageSize"</span>: <span class="json-number">2</span>,
+    <span class="json-key">"totalItems"</span>: <span class="json-number">11200</span>,
+    <span class="json-key">"totalPages"</span>: <span class="json-number">5600</span>,
+    <span class="json-key">"items"</span>: <span class="json-bracket">[</span>
+        {
+            <span class="json-key">"id"</span>: <span class="json-number">11200</span>,
+            <span class="json-key">"title"</span>: <span class="json-string">"The Horsehead Nebula in Infrared"</span>,
+            <span class="json-key">"description"</span>: <span class="json-string">"One of the most identifiable nebulae in the sky, the Horsehead Nebula in Orion, is part of a large, dark, molecular cloud..."</span>,
+            <span class="json-key">"mediaType"</span>: <span class="json-string">"image"</span>,
+            <span class="json-key">"imageUrl"</span>: <span class="json-string">"https://apod.nasa.gov/apod/image/2603/Horsehead_Webb_960.jpg"</span>,
+            <span class="json-key">"videoUrl"</span>: <span class="json-null">null</span>,
+            <span class="json-key">"thumbnailUrl"</span>: <span class="json-null">null</span>,
+            <span class="json-key">"mediaAuthor"</span>: <span class="json-string">"NASA, ESA, CSA, STScI"</span>,
+            <span class="json-key">"date"</span>: <span class="json-string">"2026-03-15"</span>,
+            <span class="json-key">"likes"</span>: <span class="json-number">42</span>,
+            <span class="json-key">"dislikes"</span>: <span class="json-number">1</span>,
+            <span class="json-key">"commentsCount"</span>: <span class="json-number">7</span>
+        },
+        {
+            <span class="json-key">"id"</span>: <span class="json-number">11199</span>,
+            <span class="json-key">"title"</span>: <span class="json-string">"Simulation: A Disk Galaxy Forms"</span>,
+            <span class="json-key">"description"</span>: <span class="json-string">"How did galaxies form in the early universe? To help answer this question, cosmologists ran a sophisticated computer simulation..."</span>,
+            <span class="json-key">"mediaType"</span>: <span class="json-string">"video"</span>,
+            <span class="json-key">"imageUrl"</span>: <span class="json-null">null</span>,
+            <span class="json-key">"videoUrl"</span>: <span class="json-string">"https://www.youtube.com/embed/M4gD1WSo5mA"</span>,
+            <span class="json-key">"thumbnailUrl"</span>: <span class="json-string">"https://img.youtube.com/vi/M4gD1WSo5mA/0.jpg"</span>,
+            <span class="json-key">"mediaAuthor"</span>: <span class="json-string">"TNG Collaboration"</span>,
+            <span class="json-key">"date"</span>: <span class="json-string">"2026-03-14"</span>,
+            <span class="json-key">"likes"</span>: <span class="json-number">15</span>,
+            <span class="json-key">"dislikes"</span>: <span class="json-number">0</span>,
+            <span class="json-key">"commentsCount"</span>: <span class="json-number">3</span>
+        }
+    <span class="json-bracket">]</span>
+}</code></pre>
+
+    <h3>Example &mdash; search and filter</h3>
+    <pre><code>GET https://rma.finlab.rs/beskar/posts?query=nebula&amp;media_type=image&amp;sort_by=likes&amp;sort_order=desc&amp;page_size=2</code></pre>
+  </section>
+
+  <!-- GET /beskar/posts/{id} -->
+  <section id="get-post" class="endpoint-section">
+    <div class="endpoint-title">
+      <span class="method-badge get">GET</span>
+      <span class="endpoint-path">/beskar/posts/{id}</span>
+      <a class="try-link" href="https://rma.finlab.rs/beskar/posts/100" target="_blank" rel="noopener">Try it &rarr;</a>
+    </div>
+    <p>Returns full details for a single post, including the complete description, HD image URL, categories, and cross-references.</p>
+
+    <h3>Path Parameters</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>id</code></td><td>Integer</td><td>The unique post ID.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Response: <code>Post</code> object</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>id</code></td><td>Integer</td><td>Unique post identifier.</td></tr>
+        <tr><td><code>title</code></td><td>String</td><td>Post title.</td></tr>
+        <tr><td><code>description</code></td><td>String</td><td>Full description text.</td></tr>
+        <tr><td><code>mediaType</code></td><td>String</td><td>Media type: <code>"image"</code> or <code>"video"</code>.</td></tr>
+        <tr><td><code>imageUrl</code></td><td>String?</td><td>Standard resolution image URL.</td></tr>
+        <tr><td><code>imageHdUrl</code></td><td>String?</td><td>High-definition image URL.</td></tr>
+        <tr><td><code>videoUrl</code></td><td>String?</td><td>Video embed URL.</td></tr>
+        <tr><td><code>thumbnailUrl</code></td><td>String?</td><td>Thumbnail URL.</td></tr>
+        <tr><td><code>mediaAuthor</code></td><td>String</td><td>Author/credit for the media.</td></tr>
+        <tr><td><code>descriptionAuthor</code></td><td>String?</td><td>Author of the description text.</td></tr>
+        <tr><td><code>copyright</code></td><td>String?</td><td>Copyright holder, if applicable.</td></tr>
+        <tr><td><code>altText</code></td><td>String?</td><td>Alternative text describing the image.</td></tr>
+        <tr><td><code>date</code></td><td>String</td><td>Original APOD date (<code>YYYY-MM-DD</code>).</td></tr>
+        <tr><td><code>likes</code></td><td>Integer</td><td>Total like count.</td></tr>
+        <tr><td><code>dislikes</code></td><td>Integer</td><td>Total dislike count.</td></tr>
+        <tr><td><code>commentsCount</code></td><td>Integer</td><td>Total number of comments.</td></tr>
+        <tr><td><code>categories</code></td><td>Array</td><td>List of <code>{id, name}</code> category objects.</td></tr>
+        <tr><td><code>references</code></td><td>Array</td><td>List of <code>{id, title, date}</code> cross-referenced posts.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Example request</h3>
+    <pre><code>GET https://rma.finlab.rs/beskar/posts/100</code></pre>
+
+    <h3>Example response</h3>
+    <pre><code>{
+    <span class="json-key">"id"</span>: <span class="json-number">100</span>,
+    <span class="json-key">"title"</span>: <span class="json-string">"The Pillars of Creation"</span>,
+    <span class="json-key">"description"</span>: <span class="json-string">"These dark pillars may look destructive, but they are creating stars. Made famous by a similar photograph taken by the Hubble Space Telescope in 1995, the above pillars are part of the Eagle Nebula, a star-forming region 6,500 light-years away in the constellation Serpens..."</span>,
+    <span class="json-key">"mediaType"</span>: <span class="json-string">"image"</span>,
+    <span class="json-key">"imageUrl"</span>: <span class="json-string">"https://apod.nasa.gov/apod/image/9606/pillars_hst_960.jpg"</span>,
+    <span class="json-key">"imageHdUrl"</span>: <span class="json-string">"https://apod.nasa.gov/apod/image/9606/pillars_hst_big.jpg"</span>,
+    <span class="json-key">"videoUrl"</span>: <span class="json-null">null</span>,
+    <span class="json-key">"thumbnailUrl"</span>: <span class="json-null">null</span>,
+    <span class="json-key">"mediaAuthor"</span>: <span class="json-string">"J. Hester, P. Scowen (ASU), HST, NASA"</span>,
+    <span class="json-key">"descriptionAuthor"</span>: <span class="json-string">"Robert Nemiroff (MTU) &amp; Jerry Bonnell (USRA)"</span>,
+    <span class="json-key">"copyright"</span>: <span class="json-null">null</span>,
+    <span class="json-key">"altText"</span>: <span class="json-string">"Three tall pillars of gas and dust in the Eagle Nebula, with bright stars forming at their tips."</span>,
+    <span class="json-key">"date"</span>: <span class="json-string">"1996-01-01"</span>,
+    <span class="json-key">"likes"</span>: <span class="json-number">128</span>,
+    <span class="json-key">"dislikes"</span>: <span class="json-number">2</span>,
+    <span class="json-key">"commentsCount"</span>: <span class="json-number">15</span>,
+    <span class="json-key">"categories"</span>: <span class="json-bracket">[</span>
+        { <span class="json-key">"id"</span>: <span class="json-number">3</span>, <span class="json-key">"name"</span>: <span class="json-string">"Nebulae"</span> },
+        { <span class="json-key">"id"</span>: <span class="json-number">7</span>, <span class="json-key">"name"</span>: <span class="json-string">"Star Formation"</span> }
+    <span class="json-bracket">]</span>,
+    <span class="json-key">"references"</span>: <span class="json-bracket">[</span>
+        { <span class="json-key">"id"</span>: <span class="json-number">4520</span>, <span class="json-key">"title"</span>: <span class="json-string">"Pillars of the Eagle Nebula in Infrared"</span>, <span class="json-key">"date"</span>: <span class="json-string">"2007-04-22"</span> },
+        { <span class="json-key">"id"</span>: <span class="json-number">8930</span>, <span class="json-key">"title"</span>: <span class="json-string">"Pillars of Creation Enhanced"</span>, <span class="json-key">"date"</span>: <span class="json-string">"2020-01-05"</span> }
+    <span class="json-bracket">]</span>
+}</code></pre>
+
+    <h3>Error example &mdash; post not found</h3>
+    <pre><code>GET https://rma.finlab.rs/beskar/posts/99999</code></pre>
+    <pre><code>{
+    <span class="json-key">"error"</span>: <span class="json-string">"undefined"</span>,
+    <span class="json-key">"httpCode"</span>: <span class="json-number">404</span>,
+    <span class="json-key">"message"</span>: <span class="json-string">"Post not found: 99999"</span>
+}</code></pre>
+  </section>
+
+  <!-- GET /beskar/posts/{id}/related -->
+  <section id="get-post-related" class="endpoint-section">
+    <div class="endpoint-title">
+      <span class="method-badge get">GET</span>
+      <span class="endpoint-path">/beskar/posts/{id}/related</span>
+    </div>
+    <p>Returns posts that share the same categories as the given post. Returns a maximum of 20 items. This endpoint is <strong>not</strong> paginated.</p>
+
+    <h3>Path Parameters</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>id</code></td><td>Integer</td><td>The unique post ID.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Response: Array of <code>PostListItem</code> objects</h3>
+    <p>Same structure as items in the <a href="#get-posts"><code>/beskar/posts</code></a> response.</p>
+
+    <h3>Example request</h3>
+    <pre><code>GET https://rma.finlab.rs/beskar/posts/100/related</code></pre>
+
+    <h3>Example response (truncated)</h3>
+    <pre><code><span class="json-bracket">[</span>
+    {
+        <span class="json-key">"id"</span>: <span class="json-number">4520</span>,
+        <span class="json-key">"title"</span>: <span class="json-string">"Pillars of the Eagle Nebula in Infrared"</span>,
+        <span class="json-key">"description"</span>: <span class="json-string">"Infrared light reveals new details in the famous Eagle Nebula pillars, including newly forming stars hidden..."</span>,
+        <span class="json-key">"mediaType"</span>: <span class="json-string">"image"</span>,
+        <span class="json-key">"imageUrl"</span>: <span class="json-string">"https://apod.nasa.gov/apod/image/0704/pillars_spitzer_960.jpg"</span>,
+        <span class="json-key">"videoUrl"</span>: <span class="json-null">null</span>,
+        <span class="json-key">"thumbnailUrl"</span>: <span class="json-null">null</span>,
+        <span class="json-key">"mediaAuthor"</span>: <span class="json-string">"NASA, JPL-Caltech, Spitzer Space Telescope"</span>,
+        <span class="json-key">"date"</span>: <span class="json-string">"2007-04-22"</span>,
+        <span class="json-key">"likes"</span>: <span class="json-number">34</span>,
+        <span class="json-key">"dislikes"</span>: <span class="json-number">0</span>,
+        <span class="json-key">"commentsCount"</span>: <span class="json-number">5</span>
+    }
+<span class="json-bracket">]</span></code></pre>
+  </section>
+
+  <!-- GET /beskar/posts/apod -->
+  <section id="get-post-apod" class="endpoint-section">
+    <div class="endpoint-title">
+      <span class="method-badge get">GET</span>
+      <span class="endpoint-path">/beskar/posts/apod</span>
+      <a class="try-link" href="https://rma.finlab.rs/beskar/posts/apod?date=2000-01-01" target="_blank" rel="noopener">Try it &rarr;</a>
+    </div>
+    <p>Looks up a post by its original NASA APOD date. Returns the full <code>Post</code> detail object.</p>
+
+    <h3>Query Parameters</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Description</th><th>Default</th></tr></thead>
+      <tbody>
+        <tr><td><code>date</code></td><td>String</td><td>Required</td><td>APOD date in <code>YYYY-MM-DD</code> format.</td><td>&mdash;</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Response: <code>Post</code> object</h3>
+    <p>Same structure as <a href="#get-post"><code>/beskar/posts/{id}</code></a> response.</p>
+
+    <h3>Example request</h3>
+    <pre><code>GET https://rma.finlab.rs/beskar/posts/apod?date=2000-01-01</code></pre>
+
+    <h3>Example response</h3>
+    <pre><code>{
+    <span class="json-key">"id"</span>: <span class="json-number">1827</span>,
+    <span class="json-key">"title"</span>: <span class="json-string">"The Millennium that Defines Universe"</span>,
+    <span class="json-key">"description"</span>: <span class="json-string">"Welcome to the year 2000! As the new millennium dawns across our planet, much remains unknown about the universe..."</span>,
+    <span class="json-key">"mediaType"</span>: <span class="json-string">"image"</span>,
+    <span class="json-key">"imageUrl"</span>: <span class="json-string">"https://apod.nasa.gov/apod/image/0001/y2k_hst.jpg"</span>,
+    <span class="json-key">"imageHdUrl"</span>: <span class="json-string">"https://apod.nasa.gov/apod/image/0001/y2k_hst_big.jpg"</span>,
+    <span class="json-key">"videoUrl"</span>: <span class="json-null">null</span>,
+    <span class="json-key">"thumbnailUrl"</span>: <span class="json-null">null</span>,
+    <span class="json-key">"mediaAuthor"</span>: <span class="json-string">"HST, NASA"</span>,
+    <span class="json-key">"descriptionAuthor"</span>: <span class="json-string">"Robert Nemiroff (MTU) &amp; Jerry Bonnell (USRA)"</span>,
+    <span class="json-key">"copyright"</span>: <span class="json-null">null</span>,
+    <span class="json-key">"altText"</span>: <span class="json-null">null</span>,
+    <span class="json-key">"date"</span>: <span class="json-string">"2000-01-01"</span>,
+    <span class="json-key">"likes"</span>: <span class="json-number">8</span>,
+    <span class="json-key">"dislikes"</span>: <span class="json-number">0</span>,
+    <span class="json-key">"commentsCount"</span>: <span class="json-number">2</span>,
+    <span class="json-key">"categories"</span>: <span class="json-bracket">[</span>
+        { <span class="json-key">"id"</span>: <span class="json-number">1</span>, <span class="json-key">"name"</span>: <span class="json-string">"Cosmology"</span> }
+    <span class="json-bracket">]</span>,
+    <span class="json-key">"references"</span>: <span class="json-bracket">[]</span>
+}</code></pre>
+  </section>
+
+  <!-- GET /beskar/posts/random -->
+  <section id="get-post-random" class="endpoint-section">
+    <div class="endpoint-title">
+      <span class="method-badge get">GET</span>
+      <span class="endpoint-path">/beskar/posts/random</span>
+      <a class="try-link" href="https://rma.finlab.rs/beskar/posts/random" target="_blank" rel="noopener">Try it &rarr;</a>
+    </div>
+    <p>Returns a random post. Each request returns a different post. Returns the full <code>Post</code> detail object.</p>
+
+    <h3>Response: <code>Post</code> object</h3>
+    <p>Same structure as <a href="#get-post"><code>/beskar/posts/{id}</code></a> response.</p>
+
+    <h3>Example request</h3>
+    <pre><code>GET https://rma.finlab.rs/beskar/posts/random</code></pre>
+
+    <div class="tip"><strong>Tip:</strong> Use this endpoint for a "discover" or "surprise me" feature in your app. Each call returns a different post.</div>
+  </section>
+
+  <!-- GET /beskar/posts/on-this-day -->
+  <section id="get-post-on-this-day" class="endpoint-section">
+    <div class="endpoint-title">
+      <span class="method-badge get">GET</span>
+      <span class="endpoint-path">/beskar/posts/on-this-day</span>
+      <a class="try-link" href="https://rma.finlab.rs/beskar/posts/on-this-day?month=7&day=4" target="_blank" rel="noopener">Try it &rarr;</a>
+    </div>
+    <p>Returns all posts published on this calendar day across all years. Useful for a "this day in astronomy history" feature.</p>
+
+    <h3>Query Parameters</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Description</th><th>Default</th></tr></thead>
+      <tbody>
+        <tr><td><code>month</code></td><td>Integer</td><td>Required</td><td>Month of the year (1-12).</td><td>&mdash;</td></tr>
+        <tr><td><code>day</code></td><td>Integer</td><td>Required</td><td>Day of the month (1-31).</td><td>&mdash;</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Response: Array of <code>PostListItem</code> objects</h3>
+    <p>Same structure as items in the <a href="#get-posts"><code>/beskar/posts</code></a> response. This endpoint is <strong>not</strong> paginated.</p>
+
+    <h3>Example request</h3>
+    <pre><code>GET https://rma.finlab.rs/beskar/posts/on-this-day?month=7&amp;day=4</code></pre>
+
+    <h3>Example response (truncated)</h3>
+    <pre><code><span class="json-bracket">[</span>
+    {
+        <span class="json-key">"id"</span>: <span class="json-number">2010</span>,
+        <span class="json-key">"title"</span>: <span class="json-string">"Mars Pathfinder on an Ancient Flood Plain"</span>,
+        <span class="json-key">"description"</span>: <span class="json-string">"On July 4th, 1997, the Mars Pathfinder spacecraft bounced onto the surface of Mars, airbag-Loss cushioned..."</span>,
+        <span class="json-key">"mediaType"</span>: <span class="json-string">"image"</span>,
+        <span class="json-key">"imageUrl"</span>: <span class="json-string">"https://apod.nasa.gov/apod/image/0007/marspath_pf_960.jpg"</span>,
+        <span class="json-key">"videoUrl"</span>: <span class="json-null">null</span>,
+        <span class="json-key">"thumbnailUrl"</span>: <span class="json-null">null</span>,
+        <span class="json-key">"mediaAuthor"</span>: <span class="json-string">"IMP Team, JPL, NASA"</span>,
+        <span class="json-key">"date"</span>: <span class="json-string">"2000-07-04"</span>,
+        <span class="json-key">"likes"</span>: <span class="json-number">12</span>,
+        <span class="json-key">"dislikes"</span>: <span class="json-number">0</span>,
+        <span class="json-key">"commentsCount"</span>: <span class="json-number">1</span>
+    },
+    {
+        <span class="json-key">"id"</span>: <span class="json-number">5780</span>,
+        <span class="json-key">"title"</span>: <span class="json-string">"NGC 7023: The Iris Nebula"</span>,
+        <span class="json-key">"description"</span>: <span class="json-string">"These cosmic clouds have blossomed 1,300 light-years away in the fertile starfields of the constellation Cepheus..."</span>,
+        <span class="json-key">"mediaType"</span>: <span class="json-string">"image"</span>,
+        <span class="json-key">"imageUrl"</span>: <span class="json-string">"https://apod.nasa.gov/apod/image/1107/iris_pugh_960.jpg"</span>,
+        <span class="json-key">"videoUrl"</span>: <span class="json-null">null</span>,
+        <span class="json-key">"thumbnailUrl"</span>: <span class="json-null">null</span>,
+        <span class="json-key">"mediaAuthor"</span>: <span class="json-string">"Martin Pugh"</span>,
+        <span class="json-key">"date"</span>: <span class="json-string">"2011-07-04"</span>,
+        <span class="json-key">"likes"</span>: <span class="json-number">22</span>,
+        <span class="json-key">"dislikes"</span>: <span class="json-number">0</span>,
+        <span class="json-key">"commentsCount"</span>: <span class="json-number">3</span>
+    }
+<span class="json-bracket">]</span></code></pre>
+  </section>
+
+  <!-- GET /beskar/posts/popular -->
+  <section id="get-post-popular" class="endpoint-section">
+    <div class="endpoint-title">
+      <span class="method-badge get">GET</span>
+      <span class="endpoint-path">/beskar/posts/popular</span>
+      <a class="try-link" href="https://rma.finlab.rs/beskar/posts/popular?page_size=5" target="_blank" rel="noopener">Try it &rarr;</a>
+    </div>
+    <p>Returns the most popular posts sorted by likes, dislikes, or comment count. Paginated.</p>
+
+    <h3>Query Parameters</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Description</th><th>Default</th></tr></thead>
+      <tbody>
+        <tr><td><code>sort_by</code></td><td>String</td><td>Optional</td><td>Popularity metric: <code>likes</code>, <code>dislikes</code>, or <code>comments_count</code>.</td><td><code>likes</code></td></tr>
+        <tr><td><code>page</code></td><td>Integer</td><td>Optional</td><td>Page number (must be &gt;= 1).</td><td><code>1</code></td></tr>
+        <tr><td><code>page_size</code></td><td>Integer</td><td>Optional</td><td>Items per page (1-100).</td><td><code>20</code></td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Response: <code>PaginatedResponse&lt;PostListItem&gt;</code></h3>
+    <p>Same structure as <a href="#get-posts"><code>/beskar/posts</code></a> response.</p>
+
+    <h3>Example request</h3>
+    <pre><code>GET https://rma.finlab.rs/beskar/posts/popular?sort_by=likes&amp;page_size=2</code></pre>
+
+    <h3>Example response</h3>
+    <pre><code>{
+    <span class="json-key">"page"</span>: <span class="json-number">1</span>,
+    <span class="json-key">"pageSize"</span>: <span class="json-number">2</span>,
+    <span class="json-key">"totalItems"</span>: <span class="json-number">11200</span>,
+    <span class="json-key">"totalPages"</span>: <span class="json-number">5600</span>,
+    <span class="json-key">"items"</span>: <span class="json-bracket">[</span>
+        {
+            <span class="json-key">"id"</span>: <span class="json-number">100</span>,
+            <span class="json-key">"title"</span>: <span class="json-string">"The Pillars of Creation"</span>,
+            <span class="json-key">"description"</span>: <span class="json-string">"These dark pillars may look destructive, but they are creating stars..."</span>,
+            <span class="json-key">"mediaType"</span>: <span class="json-string">"image"</span>,
+            <span class="json-key">"imageUrl"</span>: <span class="json-string">"https://apod.nasa.gov/apod/image/9606/pillars_hst_960.jpg"</span>,
+            <span class="json-key">"videoUrl"</span>: <span class="json-null">null</span>,
+            <span class="json-key">"thumbnailUrl"</span>: <span class="json-null">null</span>,
+            <span class="json-key">"mediaAuthor"</span>: <span class="json-string">"J. Hester, P. Scowen (ASU), HST, NASA"</span>,
+            <span class="json-key">"date"</span>: <span class="json-string">"1996-01-01"</span>,
+            <span class="json-key">"likes"</span>: <span class="json-number">128</span>,
+            <span class="json-key">"dislikes"</span>: <span class="json-number">2</span>,
+            <span class="json-key">"commentsCount"</span>: <span class="json-number">15</span>
+        },
+        {
+            <span class="json-key">"id"</span>: <span class="json-number">7650</span>,
+            <span class="json-key">"title"</span>: <span class="json-string">"Pale Blue Dot Revisited"</span>,
+            <span class="json-key">"description"</span>: <span class="json-string">"From this distant vantage point, the Earth might not seem of any particular interest. But for us, it's..."</span>,
+            <span class="json-key">"mediaType"</span>: <span class="json-string">"image"</span>,
+            <span class="json-key">"imageUrl"</span>: <span class="json-string">"https://apod.nasa.gov/apod/image/2002/PaleBlueDot_Voyager_960.jpg"</span>,
+            <span class="json-key">"videoUrl"</span>: <span class="json-null">null</span>,
+            <span class="json-key">"thumbnailUrl"</span>: <span class="json-null">null</span>,
+            <span class="json-key">"mediaAuthor"</span>: <span class="json-string">"Voyager 1, NASA, JPL-Caltech"</span>,
+            <span class="json-key">"date"</span>: <span class="json-string">"2020-02-14"</span>,
+            <span class="json-key">"likes"</span>: <span class="json-number">112</span>,
+            <span class="json-key">"dislikes"</span>: <span class="json-number">0</span>,
+            <span class="json-key">"commentsCount"</span>: <span class="json-number">21</span>
+        }
+    <span class="json-bracket">]</span>
+}</code></pre>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!--  REACTIONS                                                  -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <h2 id="reactions-heading">Reactions</h2>
+
+  <!-- POST /beskar/posts/{id}/like -->
+  <section id="post-like" class="endpoint-section">
+    <div class="endpoint-title">
+      <span class="method-badge post">POST</span>
+      <span class="endpoint-path">/beskar/posts/{id}/like</span>
+    </div>
+    <p>Adds a like to a post from the given nickname. If the user has already disliked the post, the dislike is automatically removed.</p>
+
+    <h3>Path Parameters</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>id</code></td><td>Integer</td><td>The unique post ID.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Request Body</h3>
+    <pre><code>{
+    <span class="json-key">"nickname"</span>: <span class="json-string">"astro_fan_42"</span>
+}</code></pre>
+
+    <h3>Response: <code>200 OK</code></h3>
+    <p>Returns the updated post as a <code>Post</code> object.</p>
+
+    <h3>Error: <code>409 Conflict</code></h3>
+    <p>Returned if the user has already liked this post.</p>
+    <pre><code>{
+    <span class="json-key">"error"</span>: <span class="json-string">"undefined"</span>,
+    <span class="json-key">"httpCode"</span>: <span class="json-number">409</span>,
+    <span class="json-key">"message"</span>: <span class="json-string">"User astro_fan_42 has already liked post 100"</span>
+}</code></pre>
+  </section>
+
+  <!-- POST /beskar/posts/{id}/dislike -->
+  <section id="post-dislike" class="endpoint-section">
+    <div class="endpoint-title">
+      <span class="method-badge post">POST</span>
+      <span class="endpoint-path">/beskar/posts/{id}/dislike</span>
+    </div>
+    <p>Adds a dislike to a post from the given nickname. If the user has already liked the post, the like is automatically removed.</p>
+
+    <h3>Path Parameters</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>id</code></td><td>Integer</td><td>The unique post ID.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Request Body</h3>
+    <pre><code>{
+    <span class="json-key">"nickname"</span>: <span class="json-string">"astro_fan_42"</span>
+}</code></pre>
+
+    <h3>Response: <code>200 OK</code></h3>
+    <p>Returns the updated post as a <code>Post</code> object.</p>
+
+    <h3>Error: <code>409 Conflict</code></h3>
+    <p>Returned if the user has already disliked this post.</p>
+    <pre><code>{
+    <span class="json-key">"error"</span>: <span class="json-string">"undefined"</span>,
+    <span class="json-key">"httpCode"</span>: <span class="json-number">409</span>,
+    <span class="json-key">"message"</span>: <span class="json-string">"User astro_fan_42 has already disliked post 100"</span>
+}</code></pre>
+  </section>
+
+  <!-- DELETE /beskar/posts/{id}/like -->
+  <section id="delete-like" class="endpoint-section">
+    <div class="endpoint-title">
+      <span class="method-badge delete">DELETE</span>
+      <span class="endpoint-path">/beskar/posts/{id}/like</span>
+    </div>
+    <p>Removes a like from a post for the given nickname.</p>
+
+    <h3>Path Parameters</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>id</code></td><td>Integer</td><td>The unique post ID.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Request Body</h3>
+    <pre><code>{
+    <span class="json-key">"nickname"</span>: <span class="json-string">"astro_fan_42"</span>
+}</code></pre>
+
+    <h3>Response: <code>200 OK</code></h3>
+    <p>Returns the updated post as a <code>Post</code> object.</p>
+
+    <h3>Error: <code>404 Not Found</code></h3>
+    <p>Returned if no like exists from this user on this post.</p>
+    <pre><code>{
+    <span class="json-key">"error"</span>: <span class="json-string">"undefined"</span>,
+    <span class="json-key">"httpCode"</span>: <span class="json-number">404</span>,
+    <span class="json-key">"message"</span>: <span class="json-string">"Like not found for user astro_fan_42 on post 100"</span>
+}</code></pre>
+  </section>
+
+  <!-- DELETE /beskar/posts/{id}/dislike -->
+  <section id="delete-dislike" class="endpoint-section">
+    <div class="endpoint-title">
+      <span class="method-badge delete">DELETE</span>
+      <span class="endpoint-path">/beskar/posts/{id}/dislike</span>
+    </div>
+    <p>Removes a dislike from a post for the given nickname.</p>
+
+    <h3>Path Parameters</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>id</code></td><td>Integer</td><td>The unique post ID.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Request Body</h3>
+    <pre><code>{
+    <span class="json-key">"nickname"</span>: <span class="json-string">"astro_fan_42"</span>
+}</code></pre>
+
+    <h3>Response: <code>200 OK</code></h3>
+    <p>Returns the updated post as a <code>Post</code> object.</p>
+
+    <h3>Error: <code>404 Not Found</code></h3>
+    <p>Returned if no dislike exists from this user on this post.</p>
+    <pre><code>{
+    <span class="json-key">"error"</span>: <span class="json-string">"undefined"</span>,
+    <span class="json-key">"httpCode"</span>: <span class="json-number">404</span>,
+    <span class="json-key">"message"</span>: <span class="json-string">"Dislike not found for user astro_fan_42 on post 100"</span>
+}</code></pre>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!--  COMMENTS                                                   -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <h2 id="comments-heading">Comments</h2>
+
+  <!-- GET /beskar/posts/{id}/comments -->
+  <section id="get-comments" class="endpoint-section">
+    <div class="endpoint-title">
+      <span class="method-badge get">GET</span>
+      <span class="endpoint-path">/beskar/posts/{id}/comments</span>
+    </div>
+    <p>Returns a paginated list of comments for a post.</p>
+
+    <h3>Path Parameters</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>id</code></td><td>Integer</td><td>The unique post ID.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Query Parameters</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Description</th><th>Default</th></tr></thead>
+      <tbody>
+        <tr><td><code>page</code></td><td>Integer</td><td>Optional</td><td>Page number (must be &gt;= 1).</td><td><code>1</code></td></tr>
+        <tr><td><code>page_size</code></td><td>Integer</td><td>Optional</td><td>Items per page (1-100).</td><td><code>20</code></td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Response: <code>PaginatedResponse&lt;Comment&gt;</code></h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>id</code></td><td>Integer</td><td>Unique comment identifier.</td></tr>
+        <tr><td><code>postId</code></td><td>Integer</td><td>ID of the post this comment belongs to.</td></tr>
+        <tr><td><code>nickname</code></td><td>String</td><td>Author nickname.</td></tr>
+        <tr><td><code>text</code></td><td>String</td><td>Comment text.</td></tr>
+        <tr><td><code>createdAt</code></td><td>String</td><td>Timestamp in ISO 8601 format.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Example request</h3>
+    <pre><code>GET https://rma.finlab.rs/beskar/posts/100/comments?page_size=2</code></pre>
+
+    <h3>Example response</h3>
+    <pre><code>{
+    <span class="json-key">"page"</span>: <span class="json-number">1</span>,
+    <span class="json-key">"pageSize"</span>: <span class="json-number">2</span>,
+    <span class="json-key">"totalItems"</span>: <span class="json-number">15</span>,
+    <span class="json-key">"totalPages"</span>: <span class="json-number">8</span>,
+    <span class="json-key">"items"</span>: <span class="json-bracket">[</span>
+        {
+            <span class="json-key">"id"</span>: <span class="json-number">301</span>,
+            <span class="json-key">"postId"</span>: <span class="json-number">100</span>,
+            <span class="json-key">"nickname"</span>: <span class="json-string">"astro_fan_42"</span>,
+            <span class="json-key">"text"</span>: <span class="json-string">"The Pillars of Creation never get old. Hubble really changed how we see the universe."</span>,
+            <span class="json-key">"createdAt"</span>: <span class="json-string">"2026-03-10T14:22:00Z"</span>
+        },
+        {
+            <span class="json-key">"id"</span>: <span class="json-number">302</span>,
+            <span class="json-key">"postId"</span>: <span class="json-number">100</span>,
+            <span class="json-key">"nickname"</span>: <span class="json-string">"nebula_hunter"</span>,
+            <span class="json-key">"text"</span>: <span class="json-string">"Has anyone compared this with the JWST version? The infrared view is incredible."</span>,
+            <span class="json-key">"createdAt"</span>: <span class="json-string">"2026-03-10T15:05:30Z"</span>
+        }
+    <span class="json-bracket">]</span>
+}</code></pre>
+  </section>
+
+  <!-- POST /beskar/posts/{id}/comments -->
+  <section id="post-comment" class="endpoint-section">
+    <div class="endpoint-title">
+      <span class="method-badge post">POST</span>
+      <span class="endpoint-path">/beskar/posts/{id}/comments</span>
+    </div>
+    <p>Adds a comment to a post. Returns the created comment.</p>
+
+    <h3>Path Parameters</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>id</code></td><td>Integer</td><td>The unique post ID.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Request Body</h3>
+    <pre><code>{
+    <span class="json-key">"nickname"</span>: <span class="json-string">"astro_fan_42"</span>,
+    <span class="json-key">"text"</span>: <span class="json-string">"Amazing image! The detail in these gas pillars is stunning."</span>
+}</code></pre>
+
+    <h3>Response: <code>201 Created</code></h3>
+    <pre><code>{
+    <span class="json-key">"id"</span>: <span class="json-number">316</span>,
+    <span class="json-key">"postId"</span>: <span class="json-number">100</span>,
+    <span class="json-key">"nickname"</span>: <span class="json-string">"astro_fan_42"</span>,
+    <span class="json-key">"text"</span>: <span class="json-string">"Amazing image! The detail in these gas pillars is stunning."</span>,
+    <span class="json-key">"createdAt"</span>: <span class="json-string">"2026-04-02T10:30:00Z"</span>
+}</code></pre>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!--  COLLECTIONS                                                -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <h2 id="collections-heading">Collections</h2>
+
+  <!-- POST /beskar/collections -->
+  <section id="post-collection" class="endpoint-section">
+    <div class="endpoint-title">
+      <span class="method-badge post">POST</span>
+      <span class="endpoint-path">/beskar/collections</span>
+    </div>
+    <p>Creates a new user collection of posts. A collection groups posts together under a name, associated with a nickname.</p>
+
+    <h3>Request Body</h3>
+    <pre><code>{
+    <span class="json-key">"nickname"</span>: <span class="json-string">"astro_fan_42"</span>,
+    <span class="json-key">"name"</span>: <span class="json-string">"My Favorite Nebulae"</span>,
+    <span class="json-key">"postIds"</span>: <span class="json-bracket">[</span><span class="json-number">100</span>, <span class="json-number">4520</span>, <span class="json-number">8930</span><span class="json-bracket">]</span>
+}</code></pre>
+
+    <h3>Response: <code>201 Created</code> &mdash; <code>PostCollection</code> object</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>id</code></td><td>Integer</td><td>Unique collection identifier.</td></tr>
+        <tr><td><code>name</code></td><td>String</td><td>Collection name.</td></tr>
+        <tr><td><code>nickname</code></td><td>String</td><td>Creator's nickname.</td></tr>
+        <tr><td><code>createdAt</code></td><td>String</td><td>Timestamp in ISO 8601 format.</td></tr>
+        <tr><td><code>posts</code></td><td>Array</td><td>List of <code>PostListItem</code> objects in the collection.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Example response</h3>
+    <pre><code>{
+    <span class="json-key">"id"</span>: <span class="json-number">7</span>,
+    <span class="json-key">"name"</span>: <span class="json-string">"My Favorite Nebulae"</span>,
+    <span class="json-key">"nickname"</span>: <span class="json-string">"astro_fan_42"</span>,
+    <span class="json-key">"createdAt"</span>: <span class="json-string">"2026-04-02T11:00:00Z"</span>,
+    <span class="json-key">"posts"</span>: <span class="json-bracket">[</span>
+        {
+            <span class="json-key">"id"</span>: <span class="json-number">100</span>,
+            <span class="json-key">"title"</span>: <span class="json-string">"The Pillars of Creation"</span>,
+            <span class="json-key">"description"</span>: <span class="json-string">"These dark pillars may look destructive, but they are creating stars..."</span>,
+            <span class="json-key">"mediaType"</span>: <span class="json-string">"image"</span>,
+            <span class="json-key">"imageUrl"</span>: <span class="json-string">"https://apod.nasa.gov/apod/image/9606/pillars_hst_960.jpg"</span>,
+            <span class="json-key">"videoUrl"</span>: <span class="json-null">null</span>,
+            <span class="json-key">"thumbnailUrl"</span>: <span class="json-null">null</span>,
+            <span class="json-key">"mediaAuthor"</span>: <span class="json-string">"J. Hester, P. Scowen (ASU), HST, NASA"</span>,
+            <span class="json-key">"date"</span>: <span class="json-string">"1996-01-01"</span>,
+            <span class="json-key">"likes"</span>: <span class="json-number">128</span>,
+            <span class="json-key">"dislikes"</span>: <span class="json-number">2</span>,
+            <span class="json-key">"commentsCount"</span>: <span class="json-number">15</span>
+        },
+        {
+            <span class="json-key">"id"</span>: <span class="json-number">4520</span>,
+            <span class="json-key">"title"</span>: <span class="json-string">"Pillars of the Eagle Nebula in Infrared"</span>,
+            <span class="json-key">"description"</span>: <span class="json-string">"Infrared light reveals new details in the famous Eagle Nebula pillars..."</span>,
+            <span class="json-key">"mediaType"</span>: <span class="json-string">"image"</span>,
+            <span class="json-key">"imageUrl"</span>: <span class="json-string">"https://apod.nasa.gov/apod/image/0704/pillars_spitzer_960.jpg"</span>,
+            <span class="json-key">"videoUrl"</span>: <span class="json-null">null</span>,
+            <span class="json-key">"thumbnailUrl"</span>: <span class="json-null">null</span>,
+            <span class="json-key">"mediaAuthor"</span>: <span class="json-string">"NASA, JPL-Caltech, Spitzer Space Telescope"</span>,
+            <span class="json-key">"date"</span>: <span class="json-string">"2007-04-22"</span>,
+            <span class="json-key">"likes"</span>: <span class="json-number">34</span>,
+            <span class="json-key">"dislikes"</span>: <span class="json-number">0</span>,
+            <span class="json-key">"commentsCount"</span>: <span class="json-number">5</span>
+        },
+        {
+            <span class="json-key">"id"</span>: <span class="json-number">8930</span>,
+            <span class="json-key">"title"</span>: <span class="json-string">"Pillars of Creation Enhanced"</span>,
+            <span class="json-key">"description"</span>: <span class="json-string">"A sharper and more colorful rendition of the famous Pillars of Creation from Hubble..."</span>,
+            <span class="json-key">"mediaType"</span>: <span class="json-string">"image"</span>,
+            <span class="json-key">"imageUrl"</span>: <span class="json-string">"https://apod.nasa.gov/apod/image/2001/pillars_hubble_960.jpg"</span>,
+            <span class="json-key">"videoUrl"</span>: <span class="json-null">null</span>,
+            <span class="json-key">"thumbnailUrl"</span>: <span class="json-null">null</span>,
+            <span class="json-key">"mediaAuthor"</span>: <span class="json-string">"NASA, ESA, Hubble Heritage Team"</span>,
+            <span class="json-key">"date"</span>: <span class="json-string">"2020-01-05"</span>,
+            <span class="json-key">"likes"</span>: <span class="json-number">56</span>,
+            <span class="json-key">"dislikes"</span>: <span class="json-number">1</span>,
+            <span class="json-key">"commentsCount"</span>: <span class="json-number">8</span>
+        }
+    <span class="json-bracket">]</span>
+}</code></pre>
+  </section>
+
+  <!-- GET /beskar/collections/{id} -->
+  <section id="get-collection" class="endpoint-section">
+    <div class="endpoint-title">
+      <span class="method-badge get">GET</span>
+      <span class="endpoint-path">/beskar/collections/{id}</span>
+    </div>
+    <p>Returns a collection with its expanded posts.</p>
+
+    <h3>Path Parameters</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>id</code></td><td>Integer</td><td>The unique collection ID.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Response: <code>PostCollection</code> object</h3>
+    <p>Same structure as the <a href="#post-collection">create collection</a> response.</p>
+
+    <h3>Example request</h3>
+    <pre><code>GET https://rma.finlab.rs/beskar/collections/7</code></pre>
+  </section>
+
+  <!-- PUT /beskar/collections/{id} -->
+  <section id="put-collection" class="endpoint-section">
+    <div class="endpoint-title">
+      <span class="method-badge put">PUT</span>
+      <span class="endpoint-path">/beskar/collections/{id}</span>
+    </div>
+    <p>Updates an existing collection's name and/or posts.</p>
+
+    <h3>Path Parameters</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>id</code></td><td>Integer</td><td>The unique collection ID.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Request Body</h3>
+    <pre><code>{
+    <span class="json-key">"name"</span>: <span class="json-string">"Best Nebulae of All Time"</span>,
+    <span class="json-key">"postIds"</span>: <span class="json-bracket">[</span><span class="json-number">100</span>, <span class="json-number">4520</span>, <span class="json-number">8930</span>, <span class="json-number">1050</span><span class="json-bracket">]</span>
+}</code></pre>
+
+    <h3>Response: <code>200 OK</code> &mdash; <code>PostCollection</code> object</h3>
+    <p>Returns the updated collection with expanded posts.</p>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!--  CATEGORIES                                                 -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <h2 id="categories-heading">Categories</h2>
+
+  <!-- GET /beskar/categories -->
+  <section id="get-categories" class="endpoint-section">
+    <div class="endpoint-title">
+      <span class="method-badge get">GET</span>
+      <span class="endpoint-path">/beskar/categories</span>
+      <a class="try-link" href="https://rma.finlab.rs/beskar/categories?page_size=5" target="_blank" rel="noopener">Try it &rarr;</a>
+    </div>
+    <p>Returns a paginated list of all categories with post counts.</p>
+
+    <h3>Query Parameters</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Description</th><th>Default</th></tr></thead>
+      <tbody>
+        <tr><td><code>page</code></td><td>Integer</td><td>Optional</td><td>Page number (must be &gt;= 1).</td><td><code>1</code></td></tr>
+        <tr><td><code>page_size</code></td><td>Integer</td><td>Optional</td><td>Items per page (1-100).</td><td><code>20</code></td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Response: <code>PaginatedResponse&lt;CategoryWithCount&gt;</code></h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>id</code></td><td>Integer</td><td>Unique category identifier.</td></tr>
+        <tr><td><code>name</code></td><td>String</td><td>Category name.</td></tr>
+        <tr><td><code>postCount</code></td><td>Integer</td><td>Number of posts in this category.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Example request</h3>
+    <pre><code>GET https://rma.finlab.rs/beskar/categories?page_size=5</code></pre>
+
+    <h3>Example response</h3>
+    <pre><code>{
+    <span class="json-key">"page"</span>: <span class="json-number">1</span>,
+    <span class="json-key">"pageSize"</span>: <span class="json-number">5</span>,
+    <span class="json-key">"totalItems"</span>: <span class="json-number">42</span>,
+    <span class="json-key">"totalPages"</span>: <span class="json-number">9</span>,
+    <span class="json-key">"items"</span>: <span class="json-bracket">[</span>
+        { <span class="json-key">"id"</span>: <span class="json-number">1</span>, <span class="json-key">"name"</span>: <span class="json-string">"Cosmology"</span>, <span class="json-key">"postCount"</span>: <span class="json-number">523</span> },
+        { <span class="json-key">"id"</span>: <span class="json-number">2</span>, <span class="json-key">"name"</span>: <span class="json-string">"Galaxies"</span>, <span class="json-key">"postCount"</span>: <span class="json-number">1240</span> },
+        { <span class="json-key">"id"</span>: <span class="json-number">3</span>, <span class="json-key">"name"</span>: <span class="json-string">"Nebulae"</span>, <span class="json-key">"postCount"</span>: <span class="json-number">1580</span> },
+        { <span class="json-key">"id"</span>: <span class="json-number">4</span>, <span class="json-key">"name"</span>: <span class="json-string">"Solar System"</span>, <span class="json-key">"postCount"</span>: <span class="json-number">2100</span> },
+        { <span class="json-key">"id"</span>: <span class="json-number">5</span>, <span class="json-key">"name"</span>: <span class="json-string">"Stars"</span>, <span class="json-key">"postCount"</span>: <span class="json-number">890</span> }
+    <span class="json-bracket">]</span>
+}</code></pre>
+  </section>
+
+  <!-- GET /beskar/categories/popular -->
+  <section id="get-categories-popular" class="endpoint-section">
+    <div class="endpoint-title">
+      <span class="method-badge get">GET</span>
+      <span class="endpoint-path">/beskar/categories/popular</span>
+      <a class="try-link" href="https://rma.finlab.rs/beskar/categories/popular?limit=10" target="_blank" rel="noopener">Try it &rarr;</a>
+    </div>
+    <p>Returns the top N categories ranked by post count. This endpoint is <strong>not</strong> paginated.</p>
+
+    <h3>Query Parameters</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Description</th><th>Default</th></tr></thead>
+      <tbody>
+        <tr><td><code>limit</code></td><td>Integer</td><td>Optional</td><td>Maximum number of categories to return.</td><td><code>20</code></td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Response: Array of <code>CategoryWithCount</code> objects</h3>
+    <p>Same structure as items in the <a href="#get-categories"><code>/beskar/categories</code></a> response.</p>
+
+    <h3>Example request</h3>
+    <pre><code>GET https://rma.finlab.rs/beskar/categories/popular?limit=5</code></pre>
+
+    <h3>Example response</h3>
+    <pre><code><span class="json-bracket">[</span>
+    { <span class="json-key">"id"</span>: <span class="json-number">4</span>, <span class="json-key">"name"</span>: <span class="json-string">"Solar System"</span>, <span class="json-key">"postCount"</span>: <span class="json-number">2100</span> },
+    { <span class="json-key">"id"</span>: <span class="json-number">3</span>, <span class="json-key">"name"</span>: <span class="json-string">"Nebulae"</span>, <span class="json-key">"postCount"</span>: <span class="json-number">1580</span> },
+    { <span class="json-key">"id"</span>: <span class="json-number">2</span>, <span class="json-key">"name"</span>: <span class="json-string">"Galaxies"</span>, <span class="json-key">"postCount"</span>: <span class="json-number">1240</span> },
+    { <span class="json-key">"id"</span>: <span class="json-number">5</span>, <span class="json-key">"name"</span>: <span class="json-string">"Stars"</span>, <span class="json-key">"postCount"</span>: <span class="json-number">890</span> },
+    { <span class="json-key">"id"</span>: <span class="json-number">1</span>, <span class="json-key">"name"</span>: <span class="json-string">"Cosmology"</span>, <span class="json-key">"postCount"</span>: <span class="json-number">523</span> }
+<span class="json-bracket">]</span></code></pre>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!--  STATS                                                      -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <h2 id="stats-heading">Stats</h2>
+
+  <!-- GET /beskar/stats -->
+  <section id="get-stats" class="endpoint-section">
+    <div class="endpoint-title">
+      <span class="method-badge get">GET</span>
+      <span class="endpoint-path">/beskar/stats</span>
+      <a class="try-link" href="https://rma.finlab.rs/beskar/stats" target="_blank" rel="noopener">Try it &rarr;</a>
+    </div>
+    <p>Returns aggregate statistics about the entire Beskar dataset.</p>
+
+    <h3>Response: <code>BeskarStats</code> object</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>totalPosts</code></td><td>Integer</td><td>Total number of posts.</td></tr>
+        <tr><td><code>totalImages</code></td><td>Integer</td><td>Number of posts with media type <code>"image"</code>.</td></tr>
+        <tr><td><code>totalVideos</code></td><td>Integer</td><td>Number of posts with media type <code>"video"</code>.</td></tr>
+        <tr><td><code>totalLikes</code></td><td>Integer</td><td>Sum of all likes across all posts.</td></tr>
+        <tr><td><code>totalComments</code></td><td>Integer</td><td>Total number of comments.</td></tr>
+        <tr><td><code>dateRange</code></td><td>Object</td><td>Date range object with <code>from</code> and <code>to</code> fields.</td></tr>
+        <tr><td><code>totalCategories</code></td><td>Integer</td><td>Total number of categories.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Example request</h3>
+    <pre><code>GET https://rma.finlab.rs/beskar/stats</code></pre>
+
+    <h3>Example response</h3>
+    <pre><code>{
+    <span class="json-key">"totalPosts"</span>: <span class="json-number">11200</span>,
+    <span class="json-key">"totalImages"</span>: <span class="json-number">10150</span>,
+    <span class="json-key">"totalVideos"</span>: <span class="json-number">1050</span>,
+    <span class="json-key">"totalLikes"</span>: <span class="json-number">4230</span>,
+    <span class="json-key">"totalComments"</span>: <span class="json-number">1875</span>,
+    <span class="json-key">"dateRange"</span>: {
+        <span class="json-key">"from"</span>: <span class="json-string">"1995-06-16"</span>,
+        <span class="json-key">"to"</span>: <span class="json-string">"2026-03-31"</span>
+    },
+    <span class="json-key">"totalCategories"</span>: <span class="json-number">42</span>
+}</code></pre>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!--  QUICK REFERENCE                                            -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <section id="quick-reference">
+    <h2>Quick Reference</h2>
+    <div class="table-wrap"><table class="qr-table">
+      <thead><tr><th>Endpoint</th><th>Method</th><th>Paginated</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>/beskar/posts</code></td>
+          <td><span class="method-badge get">GET</span></td>
+          <td><span class="qr-paginated qr-yes">Yes</span></td>
+          <td>List/search/filter posts.</td>
+        </tr>
+        <tr>
+          <td><code>/beskar/posts/{id}</code></td>
+          <td><span class="method-badge get">GET</span></td>
+          <td><span class="qr-paginated qr-no">No</span></td>
+          <td>Full post detail.</td>
+        </tr>
+        <tr>
+          <td><code>/beskar/posts/{id}/related</code></td>
+          <td><span class="method-badge get">GET</span></td>
+          <td><span class="qr-paginated qr-no">No</span></td>
+          <td>Related posts (max 20).</td>
+        </tr>
+        <tr>
+          <td><code>/beskar/posts/apod</code></td>
+          <td><span class="method-badge get">GET</span></td>
+          <td><span class="qr-paginated qr-no">No</span></td>
+          <td>Lookup post by APOD date.</td>
+        </tr>
+        <tr>
+          <td><code>/beskar/posts/random</code></td>
+          <td><span class="method-badge get">GET</span></td>
+          <td><span class="qr-paginated qr-no">No</span></td>
+          <td>Random post.</td>
+        </tr>
+        <tr>
+          <td><code>/beskar/posts/on-this-day</code></td>
+          <td><span class="method-badge get">GET</span></td>
+          <td><span class="qr-paginated qr-no">No</span></td>
+          <td>Posts for a calendar day across years.</td>
+        </tr>
+        <tr>
+          <td><code>/beskar/posts/popular</code></td>
+          <td><span class="method-badge get">GET</span></td>
+          <td><span class="qr-paginated qr-yes">Yes</span></td>
+          <td>Most liked/disliked/commented posts.</td>
+        </tr>
+        <tr>
+          <td><code>/beskar/posts/{id}/like</code></td>
+          <td><span class="method-badge post">POST</span></td>
+          <td><span class="qr-paginated qr-no">No</span></td>
+          <td>Like a post.</td>
+        </tr>
+        <tr>
+          <td><code>/beskar/posts/{id}/dislike</code></td>
+          <td><span class="method-badge post">POST</span></td>
+          <td><span class="qr-paginated qr-no">No</span></td>
+          <td>Dislike a post.</td>
+        </tr>
+        <tr>
+          <td><code>/beskar/posts/{id}/like</code></td>
+          <td><span class="method-badge delete">DELETE</span></td>
+          <td><span class="qr-paginated qr-no">No</span></td>
+          <td>Remove a like.</td>
+        </tr>
+        <tr>
+          <td><code>/beskar/posts/{id}/dislike</code></td>
+          <td><span class="method-badge delete">DELETE</span></td>
+          <td><span class="qr-paginated qr-no">No</span></td>
+          <td>Remove a dislike.</td>
+        </tr>
+        <tr>
+          <td><code>/beskar/posts/{id}/comments</code></td>
+          <td><span class="method-badge get">GET</span></td>
+          <td><span class="qr-paginated qr-yes">Yes</span></td>
+          <td>List comments for a post.</td>
+        </tr>
+        <tr>
+          <td><code>/beskar/posts/{id}/comments</code></td>
+          <td><span class="method-badge post">POST</span></td>
+          <td><span class="qr-paginated qr-no">No</span></td>
+          <td>Add a comment to a post.</td>
+        </tr>
+        <tr>
+          <td><code>/beskar/collections</code></td>
+          <td><span class="method-badge post">POST</span></td>
+          <td><span class="qr-paginated qr-no">No</span></td>
+          <td>Create a collection.</td>
+        </tr>
+        <tr>
+          <td><code>/beskar/collections/{id}</code></td>
+          <td><span class="method-badge get">GET</span></td>
+          <td><span class="qr-paginated qr-no">No</span></td>
+          <td>Get collection with posts.</td>
+        </tr>
+        <tr>
+          <td><code>/beskar/collections/{id}</code></td>
+          <td><span class="method-badge put">PUT</span></td>
+          <td><span class="qr-paginated qr-no">No</span></td>
+          <td>Update a collection.</td>
+        </tr>
+        <tr>
+          <td><code>/beskar/categories</code></td>
+          <td><span class="method-badge get">GET</span></td>
+          <td><span class="qr-paginated qr-yes">Yes</span></td>
+          <td>List all categories.</td>
+        </tr>
+        <tr>
+          <td><code>/beskar/categories/popular</code></td>
+          <td><span class="method-badge get">GET</span></td>
+          <td><span class="qr-paginated qr-no">No</span></td>
+          <td>Top categories by post count.</td>
+        </tr>
+        <tr>
+          <td><code>/beskar/stats</code></td>
+          <td><span class="method-badge get">GET</span></td>
+          <td><span class="qr-paginated qr-no">No</span></td>
+          <td>Aggregate statistics.</td>
+        </tr>
+      </tbody>
+    </table></div>
+  </section>
+
+</main>
+
+<!-- ── Sidebar toggle (mobile) ────────────────────────────── -->
+<script>
+function toggleSidebar() {
+  document.querySelector('.sidebar').classList.toggle('open');
+  document.querySelector('.sidebar-backdrop').classList.toggle('open');
+}
+// Close sidebar when a nav link is clicked (mobile)
+document.querySelectorAll('.sidebar a').forEach(function(link) {
+  link.addEventListener('click', function() {
+    document.querySelector('.sidebar').classList.remove('open');
+    document.querySelector('.sidebar-backdrop').classList.remove('open');
+  });
+});
+// Highlight active sidebar link on scroll
+(function() {
+  var links = document.querySelectorAll('.sidebar a[href^="#"]');
+  var sections = [];
+  links.forEach(function(a) {
+    var id = a.getAttribute('href').slice(1);
+    var el = document.getElementById(id);
+    if (el) sections.push({ el: el, link: a });
+  });
+  function onScroll() {
+    var scrollY = window.scrollY + 100;
+    var current = null;
+    for (var i = sections.length - 1; i >= 0; i--) {
+      if (sections[i].el.offsetTop <= scrollY) { current = sections[i]; break; }
+    }
+    links.forEach(function(l) { l.classList.remove('active'); });
+    if (current) current.link.classList.add('active');
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+})();
+</script>
+</body>
+</html>

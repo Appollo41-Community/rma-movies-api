@@ -36,7 +36,19 @@ fun Application.configureRouting() {
         }
 
         get("/docs") {
+            val html = this::class.java.classLoader.getResource("static/docs-index.html")?.readText()
+                ?: return@get call.respond(HttpStatusCode.NotFound)
+            call.respondText(html, ContentType.Text.Html)
+        }
+
+        get("/movies/docs") {
             val html = this::class.java.classLoader.getResource("static/docs.html")?.readText()
+                ?: return@get call.respond(HttpStatusCode.NotFound)
+            call.respondText(html, ContentType.Text.Html)
+        }
+
+        get("/beskar/docs") {
+            val html = this::class.java.classLoader.getResource("static/beskar/docs.html")?.readText()
                 ?: return@get call.respond(HttpStatusCode.NotFound)
             call.respondText(html, ContentType.Text.Html)
         }
