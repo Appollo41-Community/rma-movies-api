@@ -1,0 +1,1588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Beskar — Demo</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0a0a0f;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  padding: 20px;
+}
+
+/* Starfield background */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background:
+    radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.4), transparent),
+    radial-gradient(1px 1px at 30% 60%, rgba(255,255,255,0.3), transparent),
+    radial-gradient(1px 1px at 50% 10%, rgba(255,255,255,0.5), transparent),
+    radial-gradient(1px 1px at 70% 40%, rgba(255,255,255,0.3), transparent),
+    radial-gradient(1px 1px at 90% 80%, rgba(255,255,255,0.4), transparent),
+    radial-gradient(1px 1px at 15% 85%, rgba(184,134,11,0.5), transparent),
+    radial-gradient(1px 1px at 45% 35%, rgba(255,255,255,0.2), transparent),
+    radial-gradient(1px 1px at 65% 75%, rgba(184,134,11,0.3), transparent),
+    radial-gradient(1px 1px at 85% 15%, rgba(255,255,255,0.3), transparent),
+    radial-gradient(1.5px 1.5px at 25% 45%, rgba(184,134,11,0.6), transparent),
+    radial-gradient(1px 1px at 55% 55%, rgba(255,255,255,0.35), transparent),
+    radial-gradient(1px 1px at 75% 25%, rgba(255,255,255,0.25), transparent),
+    radial-gradient(1px 1px at 5% 50%, rgba(255,255,255,0.3), transparent),
+    radial-gradient(1.5px 1.5px at 95% 50%, rgba(184,134,11,0.4), transparent),
+    radial-gradient(1px 1px at 40% 90%, rgba(255,255,255,0.3), transparent);
+  pointer-events: none;
+  z-index: 0;
+}
+
+#phone {
+  width: 390px;
+  height: 844px;
+  background: #0d0d14;
+  border-radius: 40px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 0 0 3px #2a2218, 0 0 60px rgba(184,134,11,0.15), 0 0 40px rgba(0,0,0,0.8);
+  display: flex;
+  flex-direction: column;
+  z-index: 1;
+}
+
+/* Notch */
+#phone::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 28px;
+  background: #000;
+  border-radius: 0 0 16px 16px;
+  z-index: 100;
+}
+
+.screen {
+  display: none;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+.screen.active { display: flex; }
+
+/* App bar */
+.app-bar {
+  background: #111118;
+  padding: 44px 16px 12px;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  z-index: 10;
+  border-bottom: 1px solid rgba(184,134,11,0.15);
+}
+.app-bar h1 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #b8860b;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.app-bar .spacer { flex: 1; }
+
+/* Search bar */
+.search-bar {
+  padding: 8px 16px;
+  background: #111118;
+  flex-shrink: 0;
+}
+.search-input-wrap {
+  display: flex;
+  align-items: center;
+  background: #1a1a24;
+  border-radius: 10px;
+  padding: 0 12px;
+  border: 1px solid rgba(184,134,11,0.15);
+}
+.search-input-wrap svg { flex-shrink: 0; color: #666; }
+.search-input {
+  flex: 1;
+  background: none;
+  border: none;
+  padding: 10px 8px;
+  color: #e0e0e0;
+  font-size: 13px;
+  outline: none;
+}
+.search-input::placeholder { color: #555; }
+.search-clear {
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px;
+  display: none;
+}
+
+/* Category chips row */
+.category-row {
+  display: flex;
+  gap: 6px;
+  padding: 8px 16px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  flex-shrink: 0;
+  background: #0d0d14;
+  scrollbar-width: none;
+}
+.category-row::-webkit-scrollbar { display: none; }
+.cat-chip {
+  background: #1a1a24;
+  padding: 6px 14px;
+  border-radius: 16px;
+  font-size: 11px;
+  cursor: pointer;
+  border: 1px solid rgba(184,134,11,0.15);
+  color: #999;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+.cat-chip:hover { border-color: rgba(184,134,11,0.4); color: #ccc; }
+.cat-chip.active {
+  background: #b8860b;
+  color: #fff;
+  border-color: #b8860b;
+  font-weight: 600;
+}
+
+/* Scrollable content */
+.scroll-content {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.scroll-content::-webkit-scrollbar { width: 3px; }
+.scroll-content::-webkit-scrollbar-thumb { background: rgba(184,134,11,0.3); border-radius: 3px; }
+
+/* Post card */
+.post-card {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  margin: 4px 12px;
+  background: #141420;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.15s;
+  border: 1px solid rgba(184,134,11,0.06);
+}
+.post-card:hover { background: #1a1a2a; border-color: rgba(184,134,11,0.15); }
+.post-card .thumb {
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: #1a1a24;
+}
+.post-card .thumb-placeholder {
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  background: #1a1a24;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #b8860b;
+  font-size: 28px;
+  position: relative;
+}
+.post-card .info { flex: 1; min-width: 0; }
+.post-card .title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #e8e0d0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.3;
+}
+.post-card .desc {
+  font-size: 11px;
+  color: #777;
+  margin-top: 3px;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.post-card .meta-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  font-size: 10px;
+  color: #666;
+  flex-wrap: wrap;
+}
+.post-card .author { color: #b8860b; font-weight: 500; }
+.post-card .stats-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+  font-size: 10px;
+  color: #777;
+}
+.post-card .stat {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.post-card .stat .heart { color: #e74c3c; }
+.post-card .stat .comment-icon { color: #b8860b; }
+.video-badge {
+  position: absolute;
+  background: rgba(0,0,0,0.7);
+  color: #fff;
+  font-size: 20px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Load more button */
+.load-more-btn {
+  display: block;
+  margin: 12px auto 20px;
+  background: #1a1a24;
+  border: 1px solid rgba(184,134,11,0.3);
+  color: #b8860b;
+  padding: 10px 28px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.load-more-btn:hover { background: #b8860b; color: #fff; }
+.load-more-btn:disabled { opacity: 0.5; cursor: default; }
+
+/* States */
+.state-loading, .state-error, .state-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  color: #888;
+  gap: 12px;
+  padding: 20px;
+  text-align: center;
+}
+.spinner {
+  width: 36px; height: 36px;
+  border: 3px solid #1a1a24;
+  border-top-color: #b8860b;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.retry-btn {
+  background: #b8860b;
+  border: none;
+  color: #fff;
+  padding: 8px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Bottom nav */
+.bottom-nav {
+  display: flex;
+  background: #111118;
+  border-top: 1px solid rgba(184,134,11,0.15);
+  flex-shrink: 0;
+  padding-bottom: env(safe-area-inset-bottom, 8px);
+}
+.nav-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 0 6px;
+  background: none;
+  border: none;
+  color: #555;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 500;
+  transition: color 0.15s;
+}
+.nav-tab.active { color: #b8860b; }
+.nav-tab svg { width: 22px; height: 22px; }
+
+/* ===== DETAIL SCREEN ===== */
+.detail-bar {
+  background: #111118;
+  padding: 44px 16px 12px;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  z-index: 10;
+  border-bottom: 1px solid rgba(184,134,11,0.15);
+}
+.back-btn {
+  background: none;
+  border: none;
+  color: #b8860b;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px;
+  margin-right: 12px;
+  display: flex;
+  align-items: center;
+}
+.detail-bar h1 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #e8e0d0;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.detail-image-wrap {
+  position: relative;
+  width: 100%;
+  max-height: 260px;
+  overflow: hidden;
+  background: #0a0a14;
+  flex-shrink: 0;
+}
+.detail-image-wrap img {
+  width: 100%;
+  height: 260px;
+  object-fit: cover;
+  display: block;
+}
+.detail-image-wrap .gradient {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 60px;
+  background: linear-gradient(transparent, #0d0d14);
+}
+.detail-video-wrap {
+  position: relative;
+  width: 100%;
+  flex-shrink: 0;
+}
+.detail-video-wrap iframe {
+  width: 100%;
+  height: 220px;
+  border: none;
+}
+.play-overlay-detail {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 56px; height: 56px;
+  background: rgba(184,134,11,0.9);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  border: none;
+  color: #fff;
+  font-size: 24px;
+  transition: transform 0.15s;
+}
+.play-overlay-detail:hover { transform: translate(-50%, -50%) scale(1.1); }
+
+.detail-content { padding: 16px; }
+.detail-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #e8e0d0;
+  line-height: 1.3;
+  margin-bottom: 8px;
+}
+.detail-meta {
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 6px;
+  line-height: 1.5;
+}
+.detail-meta .accent { color: #b8860b; }
+.detail-alt {
+  font-size: 12px;
+  color: #999;
+  font-style: italic;
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  background: rgba(184,134,11,0.06);
+  border-radius: 8px;
+  border-left: 3px solid rgba(184,134,11,0.3);
+}
+.detail-categories {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.detail-cat-chip {
+  background: rgba(184,134,11,0.15);
+  color: #b8860b;
+  padding: 4px 12px;
+  border-radius: 14px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.section-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #b8860b;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin: 16px 0 8px;
+}
+.detail-description {
+  font-size: 13px;
+  color: #bbb;
+  line-height: 1.7;
+}
+.desc-author {
+  font-size: 11px;
+  color: #777;
+  margin-top: 4px;
+  font-style: italic;
+}
+
+/* Like/Dislike buttons */
+.reaction-row {
+  display: flex;
+  gap: 10px;
+  margin: 14px 0;
+}
+.reaction-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 1px solid #2a2a34;
+  background: #141420;
+  color: #999;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.reaction-btn:hover { border-color: rgba(184,134,11,0.4); }
+.reaction-btn.liked {
+  background: rgba(231,76,60,0.15);
+  border-color: #e74c3c;
+  color: #e74c3c;
+}
+.reaction-btn.disliked {
+  background: rgba(100,100,120,0.15);
+  border-color: #666;
+  color: #888;
+}
+
+/* References */
+.ref-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  margin-bottom: 4px;
+  background: #141420;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+  border: 1px solid rgba(184,134,11,0.06);
+}
+.ref-item:hover { background: #1a1a2a; }
+.ref-item .ref-title {
+  font-size: 12px;
+  color: #ccc;
+  flex: 1;
+}
+.ref-item .ref-date {
+  font-size: 10px;
+  color: #666;
+  flex-shrink: 0;
+}
+.ref-item .ref-icon {
+  color: #b8860b;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+/* Comments */
+.comment-item {
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(184,134,11,0.06);
+}
+.comment-item:last-child { border-bottom: none; }
+.comment-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.comment-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #b8860b, #8b6508);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.comment-nick {
+  font-size: 12px;
+  font-weight: 600;
+  color: #b8860b;
+}
+.comment-time {
+  font-size: 10px;
+  color: #555;
+  margin-left: auto;
+}
+.comment-text {
+  font-size: 12px;
+  color: #bbb;
+  line-height: 1.5;
+  padding-left: 34px;
+}
+
+.comment-input-wrap {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(184,134,11,0.1);
+}
+.comment-input {
+  flex: 1;
+  background: #1a1a24;
+  border: 1px solid rgba(184,134,11,0.15);
+  border-radius: 20px;
+  padding: 8px 14px;
+  color: #e0e0e0;
+  font-size: 12px;
+  outline: none;
+}
+.comment-input::placeholder { color: #555; }
+.comment-input:focus { border-color: rgba(184,134,11,0.5); }
+.comment-submit {
+  background: #b8860b;
+  border: none;
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+.comment-submit:hover { background: #9a7209; }
+.comment-submit:disabled { opacity: 0.5; cursor: default; }
+
+/* ===== EXPLORE SCREEN ===== */
+.explore-section {
+  padding: 16px;
+  margin-bottom: 4px;
+}
+.explore-card {
+  background: #141420;
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid rgba(184,134,11,0.08);
+  margin-bottom: 12px;
+}
+.explore-card-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #e8e0d0;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.explore-card-title .icon { color: #b8860b; }
+.explore-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+.explore-select,
+.explore-date-input {
+  flex: 1;
+  background: #1a1a24;
+  border: 1px solid rgba(184,134,11,0.2);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: #e0e0e0;
+  font-size: 13px;
+  outline: none;
+  appearance: auto;
+}
+.explore-select option { background: #1a1a24; color: #e0e0e0; }
+.explore-date-input::-webkit-calendar-picker-indicator { filter: invert(0.6); }
+.explore-btn {
+  background: #b8860b;
+  border: none;
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.explore-btn:hover { background: #9a7209; }
+.explore-btn:disabled { opacity: 0.5; cursor: default; }
+.explore-btn.random-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #b8860b, #8b6508);
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.explore-results {
+  margin-top: 12px;
+}
+
+/* Stats section */
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.stat-card {
+  background: #1a1a24;
+  border-radius: 10px;
+  padding: 14px;
+  text-align: center;
+  border: 1px solid rgba(184,134,11,0.08);
+}
+.stat-value {
+  font-size: 22px;
+  font-weight: 800;
+  color: #b8860b;
+  margin-bottom: 2px;
+}
+.stat-label {
+  font-size: 10px;
+  color: #777;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.stat-card.wide {
+  grid-column: 1 / -1;
+}
+
+/* Inline spinner for buttons */
+.btn-spinner {
+  display: inline-block;
+  width: 14px; height: 14px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  vertical-align: middle;
+}
+
+/* Small post card for explore results */
+.small-post-card {
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+  background: #1a1a24;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-bottom: 6px;
+  transition: background 0.15s;
+  border: 1px solid rgba(184,134,11,0.06);
+}
+.small-post-card:hover { background: #22222e; }
+.small-post-card img {
+  width: 60px;
+  height: 60px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: #141420;
+}
+.small-post-card .spc-info { flex: 1; min-width: 0; }
+.small-post-card .spc-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #e8e0d0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.3;
+}
+.small-post-card .spc-meta {
+  font-size: 10px;
+  color: #666;
+  margin-top: 3px;
+}
+
+/* Fade-in animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-in { animation: fadeIn 0.25s ease-out; }
+</style>
+</head>
+<body>
+
+<div id="phone">
+  <!-- FEED SCREEN -->
+  <div id="feed-screen" class="screen active">
+    <div class="app-bar">
+      <h1>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#b8860b" stroke-width="2">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+        </svg>
+        Beskar
+      </h1>
+      <div class="spacer"></div>
+    </div>
+    <div class="search-bar">
+      <div class="search-input-wrap">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" class="search-input" id="feed-search" placeholder="Search the cosmos...">
+        <button class="search-clear" id="search-clear" onclick="clearSearch()">&times;</button>
+      </div>
+    </div>
+    <div class="category-row" id="category-row">
+      <div class="cat-chip active" data-id="" onclick="selectCategory(this, '')">All</div>
+    </div>
+    <div class="scroll-content" id="feed-scroll">
+      <div class="state-loading" id="feed-loading">
+        <div class="spinner"></div>
+        <span style="color:#888;">Loading posts...</span>
+      </div>
+      <div class="state-error" id="feed-error" style="display:none;">
+        <span>Failed to load posts</span>
+        <button class="retry-btn" onclick="loadFeed(true)">Retry</button>
+      </div>
+      <div class="state-empty" id="feed-empty" style="display:none;">
+        <span>No posts found</span>
+        <span style="font-size:12px;color:#666;">Try a different search or category</span>
+      </div>
+      <div id="feed-items"></div>
+      <div id="feed-load-more" style="display:none;">
+        <button class="load-more-btn" onclick="loadMorePosts()">Load more</button>
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <button class="nav-tab active" onclick="switchTab('feed')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Feed
+      </button>
+      <button class="nav-tab" onclick="switchTab('explore')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+        Explore
+      </button>
+    </div>
+  </div>
+
+  <!-- DETAIL SCREEN -->
+  <div id="detail-screen" class="screen">
+    <div class="detail-bar">
+      <button class="back-btn" onclick="goBack()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <h1 id="detail-bar-title">Post</h1>
+    </div>
+    <div class="scroll-content" id="detail-scroll">
+      <div class="state-loading" id="detail-loading">
+        <div class="spinner"></div>
+        <span style="color:#888;">Loading post...</span>
+      </div>
+      <div class="state-error" id="detail-error" style="display:none;">
+        <span>Failed to load post</span>
+        <button class="retry-btn" id="detail-retry-btn">Retry</button>
+      </div>
+      <div id="detail-body" style="display:none;"></div>
+    </div>
+  </div>
+
+  <!-- EXPLORE SCREEN -->
+  <div id="explore-screen" class="screen">
+    <div class="app-bar">
+      <h1>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#b8860b" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+        Explore
+      </h1>
+    </div>
+    <div class="scroll-content" id="explore-scroll">
+      <div class="explore-section">
+        <!-- On This Day -->
+        <div class="explore-card">
+          <div class="explore-card-title">
+            <span class="icon">&#128197;</span> On This Day
+          </div>
+          <div class="explore-row">
+            <select class="explore-select" id="otd-month">
+              <option value="">Month</option>
+              <option value="1">January</option><option value="2">February</option>
+              <option value="3">March</option><option value="4">April</option>
+              <option value="5">May</option><option value="6">June</option>
+              <option value="7">July</option><option value="8">August</option>
+              <option value="9">September</option><option value="10">October</option>
+              <option value="11">November</option><option value="12">December</option>
+            </select>
+            <select class="explore-select" id="otd-day">
+              <option value="">Day</option>
+            </select>
+            <button class="explore-btn" onclick="onThisDay()">Find</button>
+          </div>
+          <div class="explore-results" id="otd-results"></div>
+        </div>
+
+        <!-- APOD Lookup -->
+        <div class="explore-card">
+          <div class="explore-card-title">
+            <span class="icon">&#128301;</span> APOD Lookup
+          </div>
+          <div class="explore-row">
+            <input type="date" class="explore-date-input" id="apod-date" min="1995-06-16" max="2026-12-31">
+            <button class="explore-btn" onclick="apodLookup()">Find</button>
+          </div>
+          <div class="explore-results" id="apod-results"></div>
+        </div>
+
+        <!-- Random -->
+        <div class="explore-card">
+          <div class="explore-card-title">
+            <span class="icon">&#127922;</span> Feeling Lucky?
+          </div>
+          <button class="explore-btn random-btn" id="random-btn" onclick="randomPost()">
+            &#10024; Random Post
+          </button>
+          <div class="explore-results" id="random-results"></div>
+        </div>
+
+        <!-- Stats -->
+        <div class="explore-card" id="stats-card">
+          <div class="explore-card-title">
+            <span class="icon">&#128202;</span> Dataset Stats
+          </div>
+          <div id="stats-content">
+            <div style="text-align:center;padding:20px;"><div class="spinner" style="margin:0 auto;"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <button class="nav-tab" onclick="switchTab('feed')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Feed
+      </button>
+      <button class="nav-tab active" onclick="switchTab('explore')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+        Explore
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = '/beskar';
+const NICKNAME = 'demo-user';
+
+// ─── State ───────────────────────────────────────────────────
+let feedPage = 1;
+let feedTotalPages = 1;
+let feedQuery = '';
+let feedCategoryId = '';
+let feedItems = [];
+let currentPostId = null;
+let currentPost = null;
+let likedState = {}; // postId -> 'liked' | 'disliked' | null
+let searchTimeout = null;
+
+// ─── Helpers ─────────────────────────────────────────────────
+function escHtml(s) {
+  if (!s) return '';
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function fmtDate(d) {
+  if (!d) return '';
+  const parts = d.split('-');
+  if (parts.length !== 3) return d;
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return months[parseInt(parts[1])-1] + ' ' + parseInt(parts[2]) + ', ' + parts[0];
+}
+
+function fmtNumber(n) {
+  if (n == null) return '0';
+  if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+  if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+  return n.toString();
+}
+
+function timeAgo(isoStr) {
+  if (!isoStr) return '';
+  const d = new Date(isoStr);
+  const now = new Date();
+  const diff = Math.floor((now - d) / 1000);
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+  if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+  if (diff < 2592000) return Math.floor(diff / 86400) + 'd ago';
+  return fmtDate(isoStr.substring(0, 10));
+}
+
+// ─── Navigation ──────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function switchTab(tab) {
+  if (tab === 'feed') {
+    showScreen('feed-screen');
+  } else {
+    showScreen('explore-screen');
+    loadStats();
+  }
+}
+
+function goBack() {
+  showScreen('feed-screen');
+}
+
+// ─── Categories ──────────────────────────────────────────────
+async function loadCategories() {
+  try {
+    const res = await fetch(API + '/categories/popular?limit=15');
+    if (!res.ok) throw new Error();
+    const cats = await res.json();
+    const row = document.getElementById('category-row');
+    row.innerHTML = '<div class="cat-chip active" data-id="" onclick="selectCategory(this, \'\')">All</div>' +
+      cats.map(c => `<div class="cat-chip" data-id="${c.id}" onclick="selectCategory(this, ${c.id})">${escHtml(c.name)}</div>`).join('');
+  } catch(e) {
+    console.error('Failed to load categories', e);
+  }
+}
+
+function selectCategory(el, catId) {
+  document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  feedCategoryId = catId;
+  loadFeed(true);
+}
+
+// ─── Search ──────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  const searchInput = document.getElementById('feed-search');
+  const clearBtn = document.getElementById('search-clear');
+
+  searchInput.addEventListener('input', () => {
+    clearBtn.style.display = searchInput.value ? 'block' : 'none';
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+      feedQuery = searchInput.value.trim();
+      loadFeed(true);
+    }, 400);
+  });
+
+  // Populate day dropdown
+  const daySelect = document.getElementById('otd-day');
+  for (let i = 1; i <= 31; i++) {
+    daySelect.innerHTML += `<option value="${i}">${i}</option>`;
+  }
+});
+
+function clearSearch() {
+  const searchInput = document.getElementById('feed-search');
+  searchInput.value = '';
+  document.getElementById('search-clear').style.display = 'none';
+  feedQuery = '';
+  loadFeed(true);
+}
+
+// ─── Feed ────────────────────────────────────────────────────
+async function loadFeed(reset) {
+  const items = document.getElementById('feed-items');
+  const loading = document.getElementById('feed-loading');
+  const error = document.getElementById('feed-error');
+  const empty = document.getElementById('feed-empty');
+  const loadMore = document.getElementById('feed-load-more');
+
+  if (reset) {
+    feedPage = 1;
+    feedItems = [];
+    items.innerHTML = '';
+  }
+
+  loading.style.display = reset ? 'flex' : 'none';
+  error.style.display = 'none';
+  empty.style.display = 'none';
+  loadMore.style.display = 'none';
+
+  let url = API + `/posts?page=${feedPage}&page_size=10&sort_by=date&sort_order=desc`;
+  if (feedQuery) url += `&query=${encodeURIComponent(feedQuery)}`;
+  if (feedCategoryId) url += `&category_id=${feedCategoryId}`;
+
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('API error');
+    const data = await res.json();
+    loading.style.display = 'none';
+    feedTotalPages = data.totalPages;
+
+    if (data.items.length === 0 && feedPage === 1) {
+      empty.style.display = 'flex';
+      return;
+    }
+
+    feedItems = feedItems.concat(data.items);
+    const html = data.items.map(p => renderPostCard(p)).join('');
+    items.insertAdjacentHTML('beforeend', html);
+
+    if (feedPage < feedTotalPages) {
+      loadMore.style.display = 'block';
+    }
+  } catch(e) {
+    loading.style.display = 'none';
+    if (feedPage === 1) {
+      error.style.display = 'flex';
+    }
+  }
+}
+
+function loadMorePosts() {
+  feedPage++;
+  loadFeed(false);
+}
+
+function renderPostCard(p) {
+  const isVideo = p.mediaType === 'video';
+  const imgSrc = p.imageUrl || p.thumbnailUrl;
+
+  let thumbHtml;
+  if (imgSrc) {
+    thumbHtml = `<div style="position:relative;flex-shrink:0;">
+      <img class="thumb" src="${escHtml(imgSrc)}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+      <div class="thumb-placeholder" style="display:none;position:absolute;top:0;left:0;">
+        ${isVideo ? '<div class="video-badge">&#9654;</div>' : '&#9734;'}
+      </div>
+      ${isVideo ? '<div class="video-badge" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:24px;height:24px;font-size:12px;">&#9654;</div>' : ''}
+    </div>`;
+  } else {
+    thumbHtml = `<div class="thumb-placeholder">
+      ${isVideo ? '<div class="video-badge">&#9654;</div>' : '&#9734;'}
+    </div>`;
+  }
+
+  return `<div class="post-card fade-in" onclick="openDetail(${p.id})">
+    ${thumbHtml}
+    <div class="info">
+      <div class="title">${escHtml(p.title)}</div>
+      <div class="desc">${escHtml(p.description)}</div>
+      <div class="meta-row">
+        <span class="author">${escHtml(p.mediaAuthor)}</span>
+        <span>${fmtDate(p.date)}</span>
+      </div>
+      <div class="stats-row">
+        <span class="stat"><span class="heart">&#9829;</span> ${p.likes}</span>
+        <span class="stat"><span class="comment-icon">&#9997;</span> ${p.commentsCount}</span>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ─── Detail ──────────────────────────────────────────────────
+async function openDetail(id) {
+  currentPostId = id;
+  showScreen('detail-screen');
+
+  const body = document.getElementById('detail-body');
+  const loading = document.getElementById('detail-loading');
+  const error = document.getElementById('detail-error');
+
+  body.style.display = 'none';
+  loading.style.display = 'flex';
+  error.style.display = 'none';
+  document.getElementById('detail-bar-title').textContent = 'Post';
+
+  document.getElementById('detail-retry-btn').onclick = () => openDetail(id);
+
+  try {
+    const [postRes, commentsRes] = await Promise.all([
+      fetch(API + `/posts/${id}`),
+      fetch(API + `/posts/${id}/comments?page_size=50`)
+    ]);
+
+    if (!postRes.ok) throw new Error('Failed to load post');
+
+    const post = await postRes.json();
+    currentPost = post;
+    let comments = [];
+    if (commentsRes.ok) {
+      const commentsData = await commentsRes.json();
+      comments = commentsData.items || [];
+    }
+
+    document.getElementById('detail-bar-title').textContent = post.title;
+
+    // Build media section
+    let mediaHtml = '';
+    if (post.mediaType === 'video' && post.videoUrl) {
+      mediaHtml = `<div class="detail-video-wrap">
+        <iframe src="${escHtml(post.videoUrl)}?autoplay=0" allowfullscreen loading="lazy"></iframe>
+      </div>`;
+    } else {
+      const imgUrl = post.imageHdUrl || post.imageUrl;
+      if (imgUrl) {
+        mediaHtml = `<div class="detail-image-wrap">
+          <img src="${escHtml(imgUrl)}" alt="${escHtml(post.altText || '')}" loading="lazy" onerror="this.parentElement.style.display='none'">
+          <div class="gradient"></div>
+        </div>`;
+      }
+    }
+
+    // Categories
+    const catsHtml = (post.categories || []).map(c =>
+      `<span class="detail-cat-chip">${escHtml(c.name)}</span>`
+    ).join('');
+
+    // Copyright & meta
+    let metaLines = [];
+    metaLines.push(`<span class="accent">${escHtml(post.mediaAuthor)}</span>`);
+    metaLines.push(fmtDate(post.date));
+    if (post.copyright) metaLines.push('&copy; ' + escHtml(post.copyright));
+
+    // Alt text
+    const altHtml = post.altText
+      ? `<div class="detail-alt">${escHtml(post.altText)}</div>`
+      : '';
+
+    // Description author
+    const descAuthorHtml = post.descriptionAuthor
+      ? `<div class="desc-author">-- ${escHtml(post.descriptionAuthor)}</div>`
+      : '';
+
+    // References
+    let refsHtml = '';
+    if (post.references && post.references.length > 0) {
+      refsHtml = `<div class="section-title">References</div>` +
+        post.references.map(r => `
+          <div class="ref-item" onclick="openDetail(${r.id})">
+            <span class="ref-icon">&#9734;</span>
+            <span class="ref-title">${escHtml(r.title)}</span>
+            <span class="ref-date">${fmtDate(r.date)}</span>
+          </div>
+        `).join('');
+    }
+
+    // Comments
+    const commentsHtml = comments.map(c => renderComment(c)).join('');
+
+    // Determine reaction state
+    const state = likedState[id] || null;
+
+    body.innerHTML = `
+      ${mediaHtml}
+      <div class="detail-content">
+        <div class="detail-title">${escHtml(post.title)}</div>
+        <div class="detail-meta">${metaLines.join(' &bull; ')}</div>
+        ${altHtml}
+        ${catsHtml ? `<div class="detail-categories">${catsHtml}</div>` : ''}
+
+        <div class="reaction-row">
+          <button class="reaction-btn ${state === 'liked' ? 'liked' : ''}" id="like-btn" onclick="toggleLike(${id})">
+            <span>&#9829;</span> <span id="like-count">${post.likes}</span>
+          </button>
+          <button class="reaction-btn ${state === 'disliked' ? 'disliked' : ''}" id="dislike-btn" onclick="toggleDislike(${id})">
+            <span>&#9785;</span> <span id="dislike-count">${post.dislikes}</span>
+          </button>
+        </div>
+
+        <div class="section-title">Description</div>
+        <div class="detail-description">${escHtml(post.description)}</div>
+        ${descAuthorHtml}
+
+        ${refsHtml}
+
+        <div class="section-title">Comments (${post.commentsCount})</div>
+        <div id="comments-list">${commentsHtml || '<div style="color:#555;font-size:12px;padding:8px 0;">No comments yet. Be the first!</div>'}</div>
+        <div class="comment-input-wrap">
+          <input type="text" class="comment-input" id="comment-input" placeholder="Write a comment..." maxlength="500">
+          <button class="comment-submit" id="comment-submit-btn" onclick="postComment(${id})">Send</button>
+        </div>
+        <div style="height:20px;"></div>
+      </div>
+    `;
+
+    // Enter key to submit comment
+    setTimeout(() => {
+      const inp = document.getElementById('comment-input');
+      if (inp) {
+        inp.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            postComment(id);
+          }
+        });
+      }
+    }, 50);
+
+    loading.style.display = 'none';
+    body.style.display = 'block';
+    document.getElementById('detail-scroll').scrollTop = 0;
+  } catch(e) {
+    loading.style.display = 'none';
+    error.style.display = 'flex';
+  }
+}
+
+function renderComment(c) {
+  const initials = (c.nickname || '?').substring(0, 2).toUpperCase();
+  return `<div class="comment-item fade-in">
+    <div class="comment-header">
+      <div class="comment-avatar">${escHtml(initials)}</div>
+      <span class="comment-nick">${escHtml(c.nickname)}</span>
+      <span class="comment-time">${timeAgo(c.createdAt)}</span>
+    </div>
+    <div class="comment-text">${escHtml(c.text)}</div>
+  </div>`;
+}
+
+// ─── Like / Dislike ──────────────────────────────────────────
+async function toggleLike(id) {
+  const likeBtn = document.getElementById('like-btn');
+  const dislikeBtn = document.getElementById('dislike-btn');
+  const likeCount = document.getElementById('like-count');
+  const dislikeCount = document.getElementById('dislike-count');
+
+  const state = likedState[id] || null;
+
+  try {
+    if (state === 'liked') {
+      // Remove like
+      likeBtn.classList.remove('liked');
+      likeCount.textContent = parseInt(likeCount.textContent) - 1;
+      likedState[id] = null;
+
+      await fetch(API + `/posts/${id}/like`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nickname: NICKNAME })
+      });
+    } else {
+      // Add like
+      if (state === 'disliked') {
+        dislikeBtn.classList.remove('disliked');
+        dislikeCount.textContent = Math.max(0, parseInt(dislikeCount.textContent) - 1);
+      }
+      likeBtn.classList.add('liked');
+      likeCount.textContent = parseInt(likeCount.textContent) + 1;
+      likedState[id] = 'liked';
+
+      const res = await fetch(API + `/posts/${id}/like`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nickname: NICKNAME })
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        likeCount.textContent = updated.likes;
+        dislikeCount.textContent = updated.dislikes;
+      }
+    }
+  } catch(e) {
+    console.error('Like failed', e);
+  }
+}
+
+async function toggleDislike(id) {
+  const likeBtn = document.getElementById('like-btn');
+  const dislikeBtn = document.getElementById('dislike-btn');
+  const likeCount = document.getElementById('like-count');
+  const dislikeCount = document.getElementById('dislike-count');
+
+  const state = likedState[id] || null;
+
+  try {
+    if (state === 'disliked') {
+      // Remove dislike
+      dislikeBtn.classList.remove('disliked');
+      dislikeCount.textContent = Math.max(0, parseInt(dislikeCount.textContent) - 1);
+      likedState[id] = null;
+
+      await fetch(API + `/posts/${id}/dislike`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nickname: NICKNAME })
+      });
+    } else {
+      // Add dislike
+      if (state === 'liked') {
+        likeBtn.classList.remove('liked');
+        likeCount.textContent = Math.max(0, parseInt(likeCount.textContent) - 1);
+      }
+      dislikeBtn.classList.add('disliked');
+      dislikeCount.textContent = parseInt(dislikeCount.textContent) + 1;
+      likedState[id] = 'disliked';
+
+      const res = await fetch(API + `/posts/${id}/dislike`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nickname: NICKNAME })
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        likeCount.textContent = updated.likes;
+        dislikeCount.textContent = updated.dislikes;
+      }
+    }
+  } catch(e) {
+    console.error('Dislike failed', e);
+  }
+}
+
+// ─── Comments ────────────────────────────────────────────────
+async function postComment(postId) {
+  const input = document.getElementById('comment-input');
+  const btn = document.getElementById('comment-submit-btn');
+  const text = input.value.trim();
+  if (!text) return;
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="btn-spinner"></span>';
+
+  // Optimistic UI
+  const optimistic = {
+    id: Date.now(),
+    postId: postId,
+    nickname: NICKNAME,
+    text: text,
+    createdAt: new Date().toISOString()
+  };
+
+  const list = document.getElementById('comments-list');
+  // Remove "no comments" placeholder
+  const placeholder = list.querySelector('div[style*="color:#555"]');
+  if (placeholder) placeholder.remove();
+
+  list.insertAdjacentHTML('beforeend', renderComment(optimistic));
+  input.value = '';
+
+  try {
+    await fetch(API + `/posts/${postId}/comments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nickname: NICKNAME, text: text })
+    });
+  } catch(e) {
+    console.error('Failed to post comment', e);
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = 'Send';
+}
+
+// ─── Explore: On This Day ────────────────────────────────────
+async function onThisDay() {
+  const month = document.getElementById('otd-month').value;
+  const day = document.getElementById('otd-day').value;
+  const results = document.getElementById('otd-results');
+
+  if (!month || !day) {
+    results.innerHTML = '<div style="color:#888;font-size:12px;padding:8px;">Please select both month and day.</div>';
+    return;
+  }
+
+  results.innerHTML = '<div style="text-align:center;padding:16px;"><div class="spinner" style="margin:0 auto;"></div></div>';
+
+  try {
+    const res = await fetch(API + `/posts/on-this-day?month=${month}&day=${day}`);
+    if (!res.ok) throw new Error();
+    const posts = await res.json();
+
+    if (posts.length === 0) {
+      results.innerHTML = '<div style="color:#888;font-size:12px;padding:8px;">No posts found for this date.</div>';
+      return;
+    }
+
+    results.innerHTML = posts.map(p => renderSmallPostCard(p)).join('');
+  } catch(e) {
+    results.innerHTML = '<div style="color:#e74c3c;font-size:12px;padding:8px;">Failed to load. Try again.</div>';
+  }
+}
+
+// ─── Explore: APOD Lookup ────────────────────────────────────
+async function apodLookup() {
+  const dateVal = document.getElementById('apod-date').value;
+  const results = document.getElementById('apod-results');
+
+  if (!dateVal) {
+    results.innerHTML = '<div style="color:#888;font-size:12px;padding:8px;">Please select a date.</div>';
+    return;
+  }
+
+  results.innerHTML = '<div style="text-align:center;padding:16px;"><div class="spinner" style="margin:0 auto;"></div></div>';
+
+  try {
+    const res = await fetch(API + `/posts/apod?date=${dateVal}`);
+    if (!res.ok) {
+      if (res.status === 404) {
+        results.innerHTML = '<div style="color:#888;font-size:12px;padding:8px;">No APOD found for this date.</div>';
+        return;
+      }
+      throw new Error();
+    }
+    const post = await res.json();
+    results.innerHTML = renderSmallPostCard(post);
+  } catch(e) {
+    results.innerHTML = '<div style="color:#e74c3c;font-size:12px;padding:8px;">Failed to load. Try again.</div>';
+  }
+}
+
+// ─── Explore: Random ─────────────────────────────────────────
+async function randomPost() {
+  const btn = document.getElementById('random-btn');
+  const results = document.getElementById('random-results');
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="btn-spinner"></span> Loading...';
+
+  try {
+    const res = await fetch(API + '/posts/random');
+    if (!res.ok) throw new Error();
+    const post = await res.json();
+    results.innerHTML = renderSmallPostCard(post);
+  } catch(e) {
+    results.innerHTML = '<div style="color:#e74c3c;font-size:12px;padding:8px;">Failed to load. Try again.</div>';
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '&#10024; Random Post';
+}
+
+// ─── Explore: Stats ──────────────────────────────────────────
+let statsLoaded = false;
+async function loadStats() {
+  if (statsLoaded) return;
+
+  try {
+    const res = await fetch(API + '/stats');
+    if (!res.ok) throw new Error();
+    const stats = await res.json();
+    statsLoaded = true;
+
+    document.getElementById('stats-content').innerHTML = `
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-value">${fmtNumber(stats.totalPosts)}</div>
+          <div class="stat-label">Total Posts</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${fmtNumber(stats.totalImages)}</div>
+          <div class="stat-label">Images</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${fmtNumber(stats.totalVideos)}</div>
+          <div class="stat-label">Videos</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${fmtNumber(stats.totalLikes)}</div>
+          <div class="stat-label">Likes</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${fmtNumber(stats.totalComments)}</div>
+          <div class="stat-label">Comments</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${stats.totalCategories}</div>
+          <div class="stat-label">Categories</div>
+        </div>
+        <div class="stat-card wide">
+          <div class="stat-value" style="font-size:14px;">${fmtDate(stats.dateRange.from)} &mdash; ${fmtDate(stats.dateRange.to)}</div>
+          <div class="stat-label">Date Range</div>
+        </div>
+      </div>
+    `;
+  } catch(e) {
+    document.getElementById('stats-content').innerHTML =
+      '<div style="color:#e74c3c;font-size:12px;padding:8px;text-align:center;">Failed to load stats.</div>';
+  }
+}
+
+// ─── Small post card for explore ─────────────────────────────
+function renderSmallPostCard(p) {
+  const isVideo = p.mediaType === 'video';
+  const imgSrc = p.imageUrl || p.thumbnailUrl;
+  const imgHtml = imgSrc
+    ? `<img src="${escHtml(imgSrc)}" alt="" loading="lazy" onerror="this.style.background='#1a1a24';this.src='';">`
+    : `<div style="width:60px;height:60px;background:#1a1a24;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#b8860b;font-size:18px;flex-shrink:0;">${isVideo ? '&#9654;' : '&#9734;'}</div>`;
+
+  return `<div class="small-post-card fade-in" onclick="openDetail(${p.id})">
+    ${imgHtml}
+    <div class="spc-info">
+      <div class="spc-title">${escHtml(p.title)}</div>
+      <div class="spc-meta">${fmtDate(p.date)} &bull; ${escHtml(p.mediaAuthor || '')}</div>
+    </div>
+  </div>`;
+}
+
+// ─── Infinite scroll detection ───────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  const feedScroll = document.getElementById('feed-scroll');
+  feedScroll.addEventListener('scroll', () => {
+    if (feedScroll.scrollHeight - feedScroll.scrollTop - feedScroll.clientHeight < 200) {
+      // Near bottom - could auto-load, but we use a button for clarity in a demo
+    }
+  });
+});
+
+// ─── Init ────────────────────────────────────────────────────
+loadCategories();
+loadFeed(true);
+</script>
+</body>
+</html>

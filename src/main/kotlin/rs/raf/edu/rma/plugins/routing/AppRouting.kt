@@ -53,6 +53,12 @@ fun Application.configureRouting() {
             call.respondText(html, ContentType.Text.Html)
         }
 
+        get("/beskar/demo") {
+            val html = this::class.java.classLoader.getResource("static/beskar/demo.html")?.readText()
+                ?: return@get call.respond(HttpStatusCode.NotFound)
+            call.respondText(html, ContentType.Text.Html)
+        }
+
         get("/premiere/demo") {
             val html = this::class.java.classLoader.getResource("static/premiere/demo.html")?.readText()
                 ?: return@get call.respond(HttpStatusCode.NotFound)
