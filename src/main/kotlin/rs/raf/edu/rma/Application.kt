@@ -3,6 +3,7 @@ package rs.raf.edu.rma
 import io.ktor.server.application.*
 import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger
+import rs.raf.edu.rma.beskar.di.beskar
 import rs.raf.edu.rma.movies.di.movies
 import rs.raf.edu.rma.plugins.errors.configureErrorStatusPages
 import rs.raf.edu.rma.plugins.monitoring.configureMonitoring
@@ -17,6 +18,7 @@ fun Application.coreModule() {
         slf4jLogger()
         modules(
             movies,
+            beskar,
         )
     }
 

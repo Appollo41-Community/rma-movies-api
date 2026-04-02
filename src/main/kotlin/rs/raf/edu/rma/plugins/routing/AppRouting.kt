@@ -6,6 +6,7 @@ import io.ktor.server.http.content.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import rs.raf.edu.rma.core.readReleaseVersion
+import rs.raf.edu.rma.beskar.routing.*
 import rs.raf.edu.rma.movies.routing.*
 
 fun Application.configureRouting() {
@@ -26,6 +27,13 @@ fun Application.configureRouting() {
         genresRouting(path = "genres")
         collectionsRouting(path = "collections")
         configRouting(path = "config")
+
+        route("beskar") {
+            beskarPostsRouting(path = "posts")
+            beskarCollectionsRouting(path = "collections")
+            beskarCategoriesRouting(path = "categories")
+            beskarStatsRouting(path = "stats")
+        }
 
         get("/docs") {
             val html = this::class.java.classLoader.getResource("static/docs.html")?.readText()
