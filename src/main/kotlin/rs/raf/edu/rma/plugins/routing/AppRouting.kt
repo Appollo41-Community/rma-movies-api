@@ -8,6 +8,7 @@ import io.ktor.server.routing.*
 import rs.raf.edu.rma.core.readReleaseVersion
 import rs.raf.edu.rma.beskar.routing.*
 import rs.raf.edu.rma.movies.routing.*
+import rs.raf.edu.rma.users.routing.authRouting
 
 fun Application.configureRouting() {
 
@@ -27,6 +28,8 @@ fun Application.configureRouting() {
         genresRouting(path = "genres")
         collectionsRouting(path = "collections")
         configRouting(path = "config")
+
+        authRouting(path = "auth")
 
         route("beskar") {
             beskarPostsRouting(path = "posts")
