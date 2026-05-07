@@ -4,6 +4,7 @@ val logbackVersion: String by project
 val koinVersion: String by project
 val exposedVersion: String by project
 val sqliteVersion: String by project
+val bcryptVersion: String by project
 
 plugins {
     kotlin("jvm") version "2.2.0"
@@ -54,6 +55,13 @@ dependencies {
     implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
     implementation("io.ktor:ktor-server-request-validation:$ktorVersion")
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
+
+    // Auth (JWT)
+    implementation("io.ktor:ktor-server-auth:$ktorVersion")
+    implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
+
+    // Password hashing
+    implementation("at.favre.lib:bcrypt:$bcryptVersion")
 
     // Serialization
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
