@@ -11,12 +11,14 @@ import rs.raf.edu.rma.users.auth.AUTH_REALM_JWT
 import rs.raf.edu.rma.users.auth.requireUserId
 import rs.raf.edu.rma.users.repository.AuthRepository
 import rs.raf.edu.rma.users.repository.FavoritesRepository
+import rs.raf.edu.rma.users.repository.LeaderboardRepository
 import rs.raf.edu.rma.users.repository.WatchlistRepository
 
 fun Route.meRouting() {
     val authRepository by inject<AuthRepository>()
     val favoritesRepository by inject<FavoritesRepository>()
     val watchlistRepository by inject<WatchlistRepository>()
+    val leaderboardRepository by inject<LeaderboardRepository>()
 
     authenticate(AUTH_REALM_JWT) {
         get("/me") {
@@ -66,6 +68,15 @@ fun Route.meRouting() {
                 watchlistRepository.remove(userId, movieId)
                 call.respond(HttpStatusCode.NoContent)
             }
+        }
+
+        get("/me/quiz-results") {
+            val userId = call.requireUserId()
+            val page = call.request.queryParameters["page"]?.toIntOrNull() ?: 1
+            val pageSize = call.request.queryParameters["page_size"]?.toIntOrNull() ?: 20
+            if (page < 1) throw AppException.BadRequestException("page must be >= 1")
+            if (pageSize !in 1..100) throw AppException.BadRequestException("page_size must be 1..100")
+            call.respond(leaderboardRepository.userResults(userId, page, pageSize))
         }
     }
 }

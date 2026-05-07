@@ -9,6 +9,7 @@ import rs.raf.edu.rma.core.readReleaseVersion
 import rs.raf.edu.rma.beskar.routing.*
 import rs.raf.edu.rma.movies.routing.*
 import rs.raf.edu.rma.users.routing.authRouting
+import rs.raf.edu.rma.users.routing.leaderboardRouting
 import rs.raf.edu.rma.users.routing.meRouting
 
 fun Application.configureRouting() {
@@ -33,6 +34,8 @@ fun Application.configureRouting() {
         authRouting(path = "auth")
 
         meRouting()
+
+        leaderboardRouting(path = "leaderboard")
 
         route("beskar") {
             beskarPostsRouting(path = "posts")
