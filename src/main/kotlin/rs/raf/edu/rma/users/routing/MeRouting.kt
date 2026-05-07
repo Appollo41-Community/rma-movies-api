@@ -11,10 +11,12 @@ import rs.raf.edu.rma.users.auth.AUTH_REALM_JWT
 import rs.raf.edu.rma.users.auth.requireUserId
 import rs.raf.edu.rma.users.repository.AuthRepository
 import rs.raf.edu.rma.users.repository.FavoritesRepository
+import rs.raf.edu.rma.users.repository.WatchlistRepository
 
 fun Route.meRouting() {
     val authRepository by inject<AuthRepository>()
     val favoritesRepository by inject<FavoritesRepository>()
+    val watchlistRepository by inject<WatchlistRepository>()
 
     authenticate(AUTH_REALM_JWT) {
         get("/me") {
@@ -41,6 +43,27 @@ fun Route.meRouting() {
                 val movieId = call.parameters["movieId"]
                     ?: throw AppException.BadRequestException("Missing movieId")
                 favoritesRepository.remove(userId, movieId)
+                call.respond(HttpStatusCode.NoContent)
+            }
+        }
+
+        route("/me/watchlist") {
+            get {
+                val userId = call.requireUserId()
+                call.respond(watchlistRepository.list(userId))
+            }
+            post("{movieId}") {
+                val userId = call.requireUserId()
+                val movieId = call.parameters["movieId"]
+                    ?: throw AppException.BadRequestException("Missing movieId")
+                val added = watchlistRepository.add(userId, movieId)
+                call.respond(if (added) HttpStatusCode.Created else HttpStatusCode.OK)
+            }
+            delete("{movieId}") {
+                val userId = call.requireUserId()
+                val movieId = call.parameters["movieId"]
+                    ?: throw AppException.BadRequestException("Missing movieId")
+                watchlistRepository.remove(userId, movieId)
                 call.respond(HttpStatusCode.NoContent)
             }
         }
